@@ -14,9 +14,9 @@ export function PortalUsers() {
         actions={<Button icon={<UserPlus className="h-4 w-4" />}>Invite Portal User</Button>}
       />
 
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] shadow-sm">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-slate-200 text-slate-500">
+          <thead className="border-b border-[var(--color-line)] text-[var(--color-muted)]">
             <tr>
               <th className="px-6 py-3 font-medium">Name</th>
               <th className="px-6 py-3 font-medium">Email</th>
@@ -24,17 +24,17 @@ export function PortalUsers() {
               <th className="px-6 py-3 font-medium">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-[var(--color-line)]">
             {portal.map((u) => {
               const assignment = u.memberships
                 .flatMap((m) => m.roleAssignments)
                 .find((r) => r.serviceId === 'company-management')
               return (
                 <tr key={u.id}>
-                  <td className="px-6 py-4 font-medium text-slate-900">{u.name}</td>
-                  <td className="px-6 py-4 text-slate-500">{u.email}</td>
+                  <td className="px-6 py-4 font-medium text-[var(--color-text)]">{u.name}</td>
+                  <td className="px-6 py-4 text-[var(--color-muted)]">{u.email}</td>
                   <td className="px-6 py-4">
-                    <span className="rounded-full bg-slate-700 px-2.5 py-0.5 text-xs text-white">
+                    <span className="rounded-full bg-[var(--color-ink)] px-2.5 py-0.5 text-xs text-white">
                       {assignment?.roleId ?? '—'}
                     </span>
                   </td>

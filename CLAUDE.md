@@ -8,6 +8,14 @@ Internal access-management admin portal (Company Management control plane), per
 Vite + React + TypeScript + Tailwind CSS v4, `react-router-dom` for routing,
 `recharts` for the dashboard chart, `lucide-react` for icons.
 
+Visual identity: ink (`#14161c`) + warm paper (`#faf9f5`) surfaces, cinema-screen
+teal (`#1c7c73`) as the interactive accent, a restrained gold (`#c89b3c`) used
+only for the wordmark and active-nav marker. Fraunces sets the product name and
+page titles; Work Sans runs the UI; IBM Plex Mono sets identifiers and tabular
+data. Tokens live in `src/index.css`. This is a deliberate departure from the
+reference screenshots' generic slate/blue admin look — the screenshots were
+inspiration for structure (sidebar, tabs, data tables), not the final palette.
+
 - `npm run dev` — start dev server
 - `npm run build` — typecheck (`tsc -b`) + production build
 - `npm run lint` — oxlint
