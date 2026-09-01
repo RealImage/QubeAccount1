@@ -40,7 +40,7 @@ export function CompanyForm() {
   const [form, setForm] = useState<Company>(existing ?? emptyCompany())
 
   if (!isNew && !existing) {
-    return <p className="text-slate-500">Company not found.</p>
+    return <p className="text-[var(--color-muted)]">Company not found.</p>
   }
 
   function set<K extends keyof Company>(key: K, value: Company[K]) {
@@ -185,7 +185,7 @@ export function CompanyForm() {
               onChange={(e) => set('emailDomains', e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
               placeholder="example.com, corp.example.org"
             />
-            <p className="mt-1 text-xs text-slate-400">Comma-separated list of email domains associated with this company.</p>
+            <p className="mt-1 text-xs text-[var(--color-muted)]">Comma-separated list of email domains associated with this company.</p>
           </Field>
           <Field full>
             <FieldLabel>Excluded Domains</FieldLabel>
@@ -194,16 +194,16 @@ export function CompanyForm() {
               onChange={(e) => set('excludedDomains', e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
               placeholder="gmail.com, outlook.com"
             />
-            <p className="mt-1 text-xs text-slate-400">Comma-separated list of email domains explicitly excluded from auto-association.</p>
+            <p className="mt-1 text-xs text-[var(--color-muted)]">Comma-separated list of email domains explicitly excluded from auto-association.</p>
           </Field>
           <Field full>
-            <label className="flex items-center gap-2 text-sm text-slate-700">
+            <label className="flex items-center gap-2 text-sm text-[var(--color-text)]">
               <input type="checkbox" checked={form.onlyDomainUser} onChange={(e) => set('onlyDomainUser', e.target.checked)} />
               This company is the only user of the specified domains
             </label>
           </Field>
           <Field full>
-            <label className="flex items-center gap-2 text-sm text-slate-700">
+            <label className="flex items-center gap-2 text-sm text-[var(--color-text)]">
               <input
                 type="checkbox"
                 checked={form.autoAddDomainUsers}
@@ -235,7 +235,7 @@ export function CompanyForm() {
               {services
                 .filter((s) => s.eligibility === 'all' || form.type === 'Internal')
                 .map((s) => (
-                  <label key={s.id} className="flex items-center gap-2 text-sm text-slate-700">
+                  <label key={s.id} className="flex items-center gap-2 text-sm text-[var(--color-text)]">
                     <input
                       type="checkbox"
                       checked={form.subscribedServiceIds.includes(s.id)}

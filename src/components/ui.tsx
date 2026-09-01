@@ -1,14 +1,16 @@
-import type { ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import clsx from 'clsx'
 
 export function StatusBadge({ status }: { status: 'Active' | 'Inactive' | 'Pending' }) {
   const styles: Record<string, string> = {
-    Active: 'bg-emerald-500 text-white',
-    Inactive: 'bg-red-500 text-white',
-    Pending: 'bg-amber-400 text-amber-950',
+    Active: 'bg-[color-mix(in_srgb,var(--color-success)_14%,white)] text-[var(--color-success)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--color-success)_30%,white)]',
+    Inactive: 'bg-[color-mix(in_srgb,var(--color-danger)_14%,white)] text-[var(--color-danger)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--color-danger)_30%,white)]',
+    Pending: 'bg-[color-mix(in_srgb,var(--color-warning)_16%,white)] text-[var(--color-warning)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--color-warning)_32%,white)]',
   }
   return (
-    <span className={clsx('inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', styles[status])}>
+    <span className={clsx('inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium', styles[status])}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current" />
       {status}
     </span>
   )
@@ -16,7 +18,7 @@ export function StatusBadge({ status }: { status: 'Active' | 'Inactive' | 'Pendi
 
 export function Pill({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-full bg-slate-700 px-3 py-1 text-xs font-medium text-white">
+    <span className="inline-flex items-center rounded-full bg-[var(--color-ink)] px-3 py-1 font-mono text-xs text-white">
       {children}
     </span>
   )
@@ -24,7 +26,7 @@ export function Pill({ children }: { children: ReactNode }) {
 
 export function Card({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={clsx('rounded-lg border border-slate-200 bg-white p-6 shadow-sm', className)}>
+    <div className={clsx('rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-6', className)}>
       {children}
     </div>
   )
@@ -42,8 +44,10 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">{title}</h1>
-        {description && <p className="mt-1 text-slate-500">{description}</p>}
+        <h1 className="font-[family-name:var(--font-display)] text-3xl font-medium text-[var(--color-text)]" style={{ textWrap: 'balance' }}>
+          {title}
+        </h1>
+        {description && <p className="mt-1.5 text-[var(--color-muted)]">{description}</p>}
       </div>
       {actions && <div className="flex gap-3">{actions}</div>}
     </div>
@@ -64,16 +68,16 @@ export function Button({
   icon?: ReactNode
 }) {
   const styles = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700',
-    secondary: 'bg-slate-600 text-white hover:bg-slate-700',
-    outline: 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
+    primary: 'bg-[var(--color-teal)] text-white hover:bg-[var(--color-teal-strong)]',
+    secondary: 'bg-[var(--color-ink)] text-white hover:bg-[color-mix(in_srgb,var(--color-ink)_85%,white)]',
+    outline: 'border border-[var(--color-line)] bg-[var(--color-surface)] text-[var(--color-text)] hover:border-[var(--color-teal)] hover:text-[var(--color-teal)]',
   }
   return (
     <button
       type={type}
       onClick={onClick}
       className={clsx(
-        'inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors',
+        'inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-teal)]',
         styles[variant],
       )}
     >
@@ -84,7 +88,7 @@ export function Button({
 }
 
 export function FieldLabel({ children }: { children: ReactNode }) {
-  return <label className="mb-1 block text-sm font-medium text-slate-700">{children}</label>
+  return <label className="mb-1 block text-sm font-medium text-[var(--color-text)]">{children}</label>
 }
 
 export function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
@@ -92,7 +96,7 @@ export function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
     <input
       {...props}
       className={clsx(
-        'w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500',
+        'w-full rounded-md border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-teal)] focus:outline-none focus:ring-1 focus:ring-[var(--color-teal)]',
         props.className,
       )}
     />
@@ -104,7 +108,7 @@ export function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
     <textarea
       {...props}
       className={clsx(
-        'w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500',
+        'w-full rounded-md border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-teal)] focus:outline-none focus:ring-1 focus:ring-[var(--color-teal)]',
         props.className,
       )}
     />
@@ -116,7 +120,7 @@ export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
     <select
       {...props}
       className={clsx(
-        'w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500',
+        'w-full rounded-md border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:border-[var(--color-teal)] focus:outline-none focus:ring-1 focus:ring-[var(--color-teal)]',
         props.className,
       )}
     />
@@ -126,7 +130,7 @@ export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
 export function FormSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <Card className="mb-6">
-      <h2 className="mb-4 text-lg font-semibold text-slate-900">{title}</h2>
+      <h2 className="mb-4 font-[family-name:var(--font-display)] text-lg font-medium text-[var(--color-text)]">{title}</h2>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">{children}</div>
     </Card>
   )
@@ -134,4 +138,77 @@ export function FormSection({ title, children }: { title: string; children: Reac
 
 export function Field({ full, children }: { full?: boolean; children: ReactNode }) {
   return <div className={clsx(full && 'md:col-span-2')}>{children}</div>
+}
+
+/** Paginates `items` client-side; resets to page 1 whenever the item set changes (e.g. a filter). */
+export function usePagination<T>(items: T[], pageSize: number) {
+  const [page, setPage] = useState(1)
+  const pageCount = Math.max(1, Math.ceil(items.length / pageSize))
+  const clampedPage = Math.min(page, pageCount)
+
+  useEffect(() => {
+    setPage(1)
+  }, [items])
+
+  const pageItems = useMemo(() => {
+    const start = (clampedPage - 1) * pageSize
+    return items.slice(start, start + pageSize)
+  }, [items, clampedPage, pageSize])
+
+  return { page: clampedPage, pageCount, setPage, pageItems }
+}
+
+export function Pagination({
+  page,
+  pageCount,
+  onChange,
+  totalLabel,
+}: {
+  page: number
+  pageCount: number
+  onChange: (page: number) => void
+  totalLabel?: string
+}) {
+  if (pageCount <= 1) return null
+  return (
+    <div className="mt-4 flex items-center justify-between">
+      <p className="text-sm text-[var(--color-muted)]">{totalLabel}</p>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          disabled={page <= 1}
+          onClick={() => onChange(page - 1)}
+          aria-label="Previous page"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--color-line)] text-[var(--color-text)] hover:border-[var(--color-teal)] hover:text-[var(--color-teal)] disabled:pointer-events-none disabled:opacity-40"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
+          <button
+            key={p}
+            type="button"
+            onClick={() => onChange(p)}
+            aria-current={p === page ? 'page' : undefined}
+            className={clsx(
+              'inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-medium',
+              p === page
+                ? 'bg-[var(--color-teal)] text-white'
+                : 'border border-[var(--color-line)] text-[var(--color-text)] hover:border-[var(--color-teal)] hover:text-[var(--color-teal)]',
+            )}
+          >
+            {p}
+          </button>
+        ))}
+        <button
+          type="button"
+          disabled={page >= pageCount}
+          onClick={() => onChange(page + 1)}
+          aria-label="Next page"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--color-line)] text-[var(--color-text)] hover:border-[var(--color-teal)] hover:text-[var(--color-teal)] disabled:pointer-events-none disabled:opacity-40"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  )
 }

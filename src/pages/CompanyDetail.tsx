@@ -16,7 +16,7 @@ export function CompanyDetail() {
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null)
 
   const company = companies.find((c) => c.id === id)
-  if (!company) return <p className="text-slate-500">Company not found.</p>
+  if (!company) return <p className="text-[var(--color-muted)]">Company not found.</p>
 
   const companyUsers = users.filter((u) => u.memberships.some((m) => m.companyId === company.id))
   const subscribedServices = services.filter((s) => company.subscribedServiceIds.includes(s.id))
@@ -41,22 +41,22 @@ export function CompanyDetail() {
 
   return (
     <div>
-      <Link to="/companies" className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
+      <Link to="/companies" className="mb-4 inline-flex items-center gap-1.5 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)]">
         <ArrowLeft className="h-4 w-4" />
         Back to Companies
       </Link>
 
-      <h1 className="text-3xl font-bold text-slate-900">{company.displayName}</h1>
-      <p className="mt-1 text-slate-500">Manage details for {company.legalName}.</p>
+      <h1 className="font-[family-name:var(--font-display)] text-3xl font-medium text-[var(--color-text)]">{company.displayName}</h1>
+      <p className="mt-1 text-[var(--color-muted)]">Manage details for {company.legalName}.</p>
 
       <div className="mt-4 flex items-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded bg-slate-100 text-slate-400">
+        <div className="flex h-16 w-16 items-center justify-center rounded bg-[color-mix(in_srgb,var(--color-teal)_8%,white)] text-[var(--color-muted)]">
           <Building2 className="h-7 w-7" />
         </div>
         <div>
-          <p className="font-semibold text-slate-900">{company.displayName}</p>
-          <p className="text-sm text-slate-500">{company.legalName}</p>
-          <p className="text-sm text-slate-400">
+          <p className="font-semibold text-[var(--color-text)]">{company.displayName}</p>
+          <p className="text-sm text-[var(--color-muted)]">{company.legalName}</p>
+          <p className="text-sm text-[var(--color-muted)]">
             {company.address.city}
             {company.address.state ? `, ${company.address.state}` : ''}
           </p>
@@ -66,7 +66,7 @@ export function CompanyDetail() {
         </div>
       </div>
 
-      <div className="mt-6 flex rounded-md border border-slate-200 bg-slate-50 text-sm font-medium">
+      <div className="mt-6 flex rounded-md border border-[var(--color-line)] bg-[var(--color-paper)] text-sm font-medium">
         {(
           [
             { key: 'details', label: 'Company Details', icon: FileText },
@@ -79,7 +79,7 @@ export function CompanyDetail() {
             onClick={() => setTab(key)}
             className={clsx(
               'flex flex-1 items-center justify-center gap-2 border-b-2 px-4 py-3 transition-colors',
-              tab === key ? 'border-blue-600 bg-white text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-800',
+              tab === key ? 'border-[var(--color-teal)] bg-[var(--color-surface)] text-[var(--color-text)]' : 'border-transparent text-[var(--color-muted)] hover:text-[var(--color-text)]',
             )}
           >
             <Icon className="h-4 w-4" />
@@ -89,7 +89,7 @@ export function CompanyDetail() {
       </div>
 
       {tab === 'details' && (
-        <div className="mt-6 rounded-b-md border border-t-0 border-slate-200 bg-white p-6">
+        <div className="mt-6 rounded-b-md border border-t-0 border-[var(--color-line)] bg-[var(--color-surface)] p-6">
           <dl className="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-2">
             <Detail label="Company Legal Name" value={company.legalName} />
             <Detail label="Company Display Name" value={company.displayName} />
@@ -116,16 +116,16 @@ export function CompanyDetail() {
       )}
 
       {tab === 'users' && (
-        <div className="mt-6 rounded-b-md border border-t-0 border-slate-200 bg-white p-6">
+        <div className="mt-6 rounded-b-md border border-t-0 border-[var(--color-line)] bg-[var(--color-surface)] p-6">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Company Users</h2>
-              <p className="text-sm text-slate-500">Manage users associated with {company.displayName}.</p>
+              <h2 className="font-[family-name:var(--font-display)] text-lg font-medium text-[var(--color-text)]">Company Users</h2>
+              <p className="text-sm text-[var(--color-muted)]">Manage users associated with {company.displayName}.</p>
             </div>
             <Button icon={<UserPlus className="h-4 w-4" />}>Add User</Button>
           </div>
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200 text-slate-500">
+            <thead className="border-b border-[var(--color-line)] text-[var(--color-muted)]">
               <tr>
                 <th className="py-2 pr-4 font-medium">Name</th>
                 <th className="py-2 pr-4 font-medium">Email</th>
@@ -133,15 +133,15 @@ export function CompanyDetail() {
                 <th className="py-2 pr-4 font-medium">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[var(--color-line)]">
               {companyUsers.map((u) => {
                 const membership = u.memberships.find((m) => m.companyId === company.id)!
                 const anyPending = membership.roleAssignments.some((r) => effectiveAccess(company, r) === 'pending')
                 return (
                   <tr key={u.id}>
-                    <td className="py-3 pr-4 font-medium text-slate-800">{u.name}</td>
-                    <td className="py-3 pr-4 text-slate-500">{u.email}</td>
-                    <td className="py-3 pr-4 text-slate-500">
+                    <td className="py-3 pr-4 font-medium text-[var(--color-text)]">{u.name}</td>
+                    <td className="py-3 pr-4 text-[var(--color-muted)]">{u.email}</td>
+                    <td className="py-3 pr-4 text-[var(--color-muted)]">
                       {membership.roleAssignments.map((r) => serviceName(r.serviceId)).join(', ') || '—'}
                     </td>
                     <td className="py-3 pr-4">
@@ -152,7 +152,7 @@ export function CompanyDetail() {
               })}
               {companyUsers.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-slate-400">
+                  <td colSpan={4} className="py-8 text-center text-[var(--color-muted)]">
                     No users yet.
                   </td>
                 </tr>
@@ -163,12 +163,12 @@ export function CompanyDetail() {
       )}
 
       {tab === 'subscriptions' && (
-        <div className="mt-6 rounded-b-md border border-t-0 border-slate-200 bg-white p-6">
-          <h2 className="text-lg font-semibold text-slate-900">Service Subscriptions</h2>
-          <p className="mb-4 text-sm text-slate-500">Manage Qube Service subscriptions and user roles for {company.displayName}.</p>
+        <div className="mt-6 rounded-b-md border border-t-0 border-[var(--color-line)] bg-[var(--color-surface)] p-6">
+          <h2 className="font-[family-name:var(--font-display)] text-lg font-medium text-[var(--color-text)]">Service Subscriptions</h2>
+          <p className="mb-4 text-sm text-[var(--color-muted)]">Manage Qube Service subscriptions and user roles for {company.displayName}.</p>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <Card className="lg:col-span-1">
-              <h3 className="mb-3 font-semibold text-slate-900">Subscribed Services</h3>
+              <h3 className="mb-3 font-semibold text-[var(--color-text)]">Subscribed Services</h3>
               <div className="space-y-1">
                 {subscribedServices.map((s) => (
                   <button
@@ -176,21 +176,21 @@ export function CompanyDetail() {
                     onClick={() => setSelectedServiceId(s.id)}
                     className={clsx(
                       'block w-full rounded-md px-3 py-2 text-left text-sm',
-                      activeServiceId === s.id ? 'bg-blue-600 text-white' : 'border border-slate-200 text-slate-700 hover:bg-slate-50',
+                      activeServiceId === s.id ? 'bg-[var(--color-teal)] text-white' : 'border border-[var(--color-line)] text-[var(--color-text)] hover:bg-[var(--color-paper)]',
                     )}
                   >
                     {s.name}
                   </button>
                 ))}
-                {subscribedServices.length === 0 && <p className="text-sm text-slate-400">No subscriptions yet.</p>}
+                {subscribedServices.length === 0 && <p className="text-sm text-[var(--color-muted)]">No subscriptions yet.</p>}
               </div>
               <details className="mt-4">
-                <summary className="cursor-pointer text-sm text-blue-600">Manage subscriptions</summary>
+                <summary className="cursor-pointer text-sm text-[var(--color-teal)]">Manage subscriptions</summary>
                 <div className="mt-2 max-h-64 space-y-1 overflow-y-auto">
                   {services
                     .filter((s) => s.eligibility === 'all' || company.type === 'Internal')
                     .map((s) => (
-                      <label key={s.id} className="flex items-center gap-2 text-xs text-slate-600">
+                      <label key={s.id} className="flex items-center gap-2 text-xs text-[var(--color-muted)]">
                         <input
                           type="checkbox"
                           checked={company.subscribedServiceIds.includes(s.id)}
@@ -205,7 +205,7 @@ export function CompanyDetail() {
 
             <Card className="lg:col-span-2">
               <div className="mb-3 flex items-center justify-between">
-                <h3 className="font-semibold text-slate-900">Users & Roles for {activeService?.name ?? '—'}</h3>
+                <h3 className="font-semibold text-[var(--color-text)]">Users & Roles for {activeService?.name ?? '—'}</h3>
                 {activeService && (
                   <Button icon={<UserPlus className="h-4 w-4" />} onClick={() => alert('Assign role — demo only.')}>
                     Add User to Service
@@ -213,26 +213,26 @@ export function CompanyDetail() {
                 )}
               </div>
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 text-slate-500">
+                <thead className="border-b border-[var(--color-line)] text-[var(--color-muted)]">
                   <tr>
                     <th className="py-2 pr-4 font-medium">User Name</th>
                     <th className="py-2 pr-4 font-medium">Email</th>
                     <th className="py-2 pr-4 font-medium">Role in Service</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-[var(--color-line)]">
                   {usersForActiveService.map(({ user, assignment }) => (
                     <tr key={user.id}>
-                      <td className="py-3 pr-4 font-medium text-slate-800">{user.name}</td>
-                      <td className="py-3 pr-4 text-slate-500">{user.email}</td>
+                      <td className="py-3 pr-4 font-medium text-[var(--color-text)]">{user.name}</td>
+                      <td className="py-3 pr-4 text-[var(--color-muted)]">{user.email}</td>
                       <td className="py-3 pr-4">
-                        <span className="rounded-full bg-slate-700 px-2.5 py-0.5 text-xs text-white">{assignment.roleId}</span>
+                        <span className="rounded-full bg-[var(--color-ink)] px-2.5 py-0.5 text-xs text-white">{assignment.roleId}</span>
                       </td>
                     </tr>
                   ))}
                   {usersForActiveService.length === 0 && (
                     <tr>
-                      <td colSpan={3} className="py-8 text-center text-slate-400">
+                      <td colSpan={3} className="py-8 text-center text-[var(--color-muted)]">
                         No users assigned to this service.
                       </td>
                     </tr>
@@ -250,8 +250,8 @@ export function CompanyDetail() {
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-sm text-slate-500">{label}</dt>
-      <dd className="text-sm font-medium text-slate-900">{value || '—'}</dd>
+      <dt className="text-sm text-[var(--color-muted)]">{label}</dt>
+      <dd className="text-sm font-medium text-[var(--color-text)]">{value || '—'}</dd>
     </div>
   )
 }

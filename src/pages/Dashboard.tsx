@@ -45,58 +45,58 @@ export function Dashboard() {
       <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-3">
         <Card>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-500">Total Companies</span>
-            <Building2 className="h-5 w-5 text-slate-400" />
+            <span className="text-sm text-[var(--color-muted)]">Total Companies</span>
+            <Building2 className="h-5 w-5 text-[var(--color-teal)]" />
           </div>
-          <div className="mt-2 text-3xl font-bold text-slate-900">{companies.length}</div>
-          <p className="mt-1 text-sm text-slate-500">All registered companies</p>
+          <div className="mt-2 font-[family-name:var(--font-display)] text-3xl font-medium text-[var(--color-text)]">{companies.length}</div>
+          <p className="mt-1 text-sm text-[var(--color-muted)]">All registered companies</p>
         </Card>
         <Card>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-500">Total Users</span>
-            <Users className="h-5 w-5 text-slate-400" />
+            <span className="text-sm text-[var(--color-muted)]">Total Users</span>
+            <Users className="h-5 w-5 text-[var(--color-teal)]" />
           </div>
-          <div className="mt-2 text-3xl font-bold text-slate-900">{users.length}</div>
-          <p className="mt-1 text-sm text-slate-500">Across all companies and portal</p>
+          <div className="mt-2 font-[family-name:var(--font-display)] text-3xl font-medium text-[var(--color-text)]">{users.length}</div>
+          <p className="mt-1 text-sm text-[var(--color-muted)]">Across all companies and portal</p>
         </Card>
         <Card>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-500">Active Services</span>
-            <Package className="h-5 w-5 text-slate-400" />
+            <span className="text-sm text-[var(--color-muted)]">Active Services</span>
+            <Package className="h-5 w-5 text-[var(--color-teal)]" />
           </div>
-          <div className="mt-2 text-3xl font-bold text-slate-900">{services.length}</div>
-          <p className="mt-1 text-sm text-slate-500">Currently in use</p>
+          <div className="mt-2 font-[family-name:var(--font-display)] text-3xl font-medium text-[var(--color-text)]">{services.length}</div>
+          <p className="mt-1 text-sm text-[var(--color-muted)]">Currently in use</p>
         </Card>
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <h2 className="text-lg font-semibold text-slate-900">Growth Trends</h2>
-          <p className="mb-4 text-sm text-slate-500">Company and User Growth Over Time</p>
+          <h2 className="font-[family-name:var(--font-display)] text-lg font-medium text-[var(--color-text)]">Growth Trends</h2>
+          <p className="mb-4 text-sm text-[var(--color-muted)]">Company and User Growth Over Time</p>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={growthData}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-              <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#94a3b8" />
-              <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="companies" fill="#e07856" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="users" fill="#3f9d84" radius={[4, 4, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e1d6" />
+              <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#6e6f76' }} stroke="#e5e1d6" />
+              <YAxis tick={{ fontSize: 12, fill: '#6e6f76' }} stroke="#e5e1d6" />
+              <Tooltip contentStyle={{ borderColor: '#e5e1d6', borderRadius: 8, fontSize: 13 }} />
+              <Legend wrapperStyle={{ fontSize: 13 }} />
+              <Bar dataKey="companies" name="companies" fill="#1c7c73" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="users" name="users" fill="#c89b3c" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Card>
 
         <Card>
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">Recent Activity</h2>
+          <h2 className="mb-4 font-[family-name:var(--font-display)] text-lg font-medium text-[var(--color-text)]">Recent Activity</h2>
           <ul className="space-y-4">
             {auditLog.map((entry) => (
               <li key={entry.id} className="flex gap-3">
-                <span className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-slate-100">
-                  <Shield className="h-4 w-4 text-slate-500" />
+                <span className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--color-teal)_10%,white)]">
+                  <Shield className="h-4 w-4 text-[var(--color-teal)]" />
                 </span>
                 <div>
-                  <p className="text-sm text-slate-800">{entry.summary}</p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-sm text-[var(--color-text)]">{entry.summary}</p>
+                  <p className="text-xs text-[var(--color-muted)]">
                     {timeAgo(entry.timestamp)}
                     {entry.actor !== 'System' && ` by ${entry.actor}`}
                   </p>
@@ -108,7 +108,7 @@ export function Dashboard() {
       </div>
 
       <Card>
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Quick Actions</h2>
+        <h2 className="mb-4 font-[family-name:var(--font-display)] text-lg font-medium text-[var(--color-text)]">Quick Actions</h2>
         <div className="flex flex-wrap gap-3">
           <Link to="/companies/new">
             <Button variant="outline" icon={<Building2 className="h-4 w-4" />}>
