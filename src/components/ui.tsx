@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import clsx from 'clsx'
 
 export function StatusBadge({ status }: { status: 'Active' | 'Inactive' | 'Pending' }) {
@@ -137,4 +138,77 @@ export function FormSection({ title, children }: { title: string; children: Reac
 
 export function Field({ full, children }: { full?: boolean; children: ReactNode }) {
   return <div className={clsx(full && 'md:col-span-2')}>{children}</div>
+}
+
+/** Paginates `items` client-side; resets to page 1 whenever the item set changes (e.g. a filter). */
+export function usePagination<T>(items: T[], pageSize: number) {
+  const [page, setPage] = useState(1)
+  const pageCount = Math.max(1, Math.ceil(items.length / pageSize))
+  const clampedPage = Math.min(page, pageCount)
+
+  useEffect(() => {
+    setPage(1)
+  }, [items])
+
+  const pageItems = useMemo(() => {
+    const start = (clampedPage - 1) * pageSize
+    return items.slice(start, start + pageSize)
+  }, [items, clampedPage, pageSize])
+
+  return { page: clampedPage, pageCount, setPage, pageItems }
+}
+
+export function Pagination({
+  page,
+  pageCount,
+  onChange,
+  totalLabel,
+}: {
+  page: number
+  pageCount: number
+  onChange: (page: number) => void
+  totalLabel?: string
+}) {
+  if (pageCount <= 1) return null
+  return (
+    <div className="mt-4 flex items-center justify-between">
+      <p className="text-sm text-[var(--color-muted)]">{totalLabel}</p>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          disabled={page <= 1}
+          onClick={() => onChange(page - 1)}
+          aria-label="Previous page"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--color-line)] text-[var(--color-text)] hover:border-[var(--color-teal)] hover:text-[var(--color-teal)] disabled:pointer-events-none disabled:opacity-40"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
+          <button
+            key={p}
+            type="button"
+            onClick={() => onChange(p)}
+            aria-current={p === page ? 'page' : undefined}
+            className={clsx(
+              'inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-medium',
+              p === page
+                ? 'bg-[var(--color-teal)] text-white'
+                : 'border border-[var(--color-line)] text-[var(--color-text)] hover:border-[var(--color-teal)] hover:text-[var(--color-teal)]',
+            )}
+          >
+            {p}
+          </button>
+        ))}
+        <button
+          type="button"
+          disabled={page >= pageCount}
+          onClick={() => onChange(page + 1)}
+          aria-label="Next page"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--color-line)] text-[var(--color-text)] hover:border-[var(--color-teal)] hover:text-[var(--color-teal)] disabled:pointer-events-none disabled:opacity-40"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  )
 }

@@ -1,10 +1,14 @@
+import { useMemo } from 'react'
 import { UserPlus } from 'lucide-react'
 import { useStore } from '../data/store'
-import { Button, PageHeader, StatusBadge } from '../components/ui'
+import { Button, PageHeader, Pagination, StatusBadge, usePagination } from '../components/ui'
+
+const PAGE_SIZE = 5
 
 export function PortalUsers() {
   const { users } = useStore()
-  const portal = users.filter((u) => u.isPortalUser)
+  const portal = useMemo(() => users.filter((u) => u.isPortalUser), [users])
+  const { page, pageCount, setPage, pageItems } = usePagination(portal, PAGE_SIZE)
 
   return (
     <div>
@@ -25,7 +29,7 @@ export function PortalUsers() {
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--color-line)]">
-            {portal.map((u) => {
+            {pageItems.map((u) => {
               const assignment = u.memberships
                 .flatMap((m) => m.roleAssignments)
                 .find((r) => r.serviceId === 'company-management')
@@ -47,6 +51,12 @@ export function PortalUsers() {
           </tbody>
         </table>
       </div>
+      <Pagination
+        page={page}
+        pageCount={pageCount}
+        onChange={setPage}
+        totalLabel={`Showing ${pageItems.length ? (page - 1) * PAGE_SIZE + 1 : 0}–${(page - 1) * PAGE_SIZE + pageItems.length} of ${portal.length} portal users`}
+      />
     </div>
   )
 }

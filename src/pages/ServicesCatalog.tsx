@@ -1,15 +1,21 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Settings2 } from 'lucide-react'
 import clsx from 'clsx'
 import { services } from '../data/services'
 import { useStore } from '../data/store'
-import { Button, PageHeader } from '../components/ui'
+import { Button, PageHeader, Pagination, usePagination } from '../components/ui'
+
+const PAGE_SIZE = 6
 
 export function ServicesCatalog() {
   const { companies } = useStore()
   const [tab, setTab] = useState<'all' | 'internal'>('all')
-  const filtered = services.filter((s) => (tab === 'all' ? s.eligibility === 'all' : s.eligibility === 'internal'))
+  const filtered = useMemo(
+    () => services.filter((s) => (tab === 'all' ? s.eligibility === 'all' : s.eligibility === 'internal')),
+    [tab],
+  )
+  const { page, pageCount, setPage, pageItems } = usePagination(filtered, PAGE_SIZE)
 
   function subscribedCount(serviceId: string) {
     return companies.filter((c) => c.status === 'Active' && c.subscribedServiceIds.includes(serviceId)).length
@@ -46,7 +52,7 @@ export function ServicesCatalog() {
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--color-line)]">
-            {filtered.map((s) => (
+            {pageItems.map((s) => (
               <tr key={s.id} className="hover:bg-[var(--color-paper)]">
                 <td className="px-6 py-4 font-medium text-[var(--color-text)]">{s.name}</td>
                 <td className="px-6 py-4">
@@ -68,6 +74,12 @@ export function ServicesCatalog() {
           </tbody>
         </table>
       </div>
+      <Pagination
+        page={page}
+        pageCount={pageCount}
+        onChange={setPage}
+        totalLabel={`Showing ${pageItems.length ? (page - 1) * PAGE_SIZE + 1 : 0}–${(page - 1) * PAGE_SIZE + pageItems.length} of ${filtered.length} services`}
+      />
 
       <p className="mt-4 text-sm text-[var(--color-muted)]">
         This list includes all services available for company subscriptions. Service configuration involves managing service-specific

@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom'
 import { Building2, Plus, Search } from 'lucide-react'
 import { useStore, serviceName } from '../data/store'
 import { services } from '../data/services'
-import { Button, PageHeader, Select, StatusBadge, TextInput } from '../components/ui'
+import { Button, PageHeader, Pagination, Select, StatusBadge, TextInput, usePagination } from '../components/ui'
+
+const PAGE_SIZE = 5
 
 export function CompanyList() {
   const { companies } = useStore()
@@ -22,6 +24,8 @@ export function CompanyList() {
       return matchesSearch && matchesService && matchesStatus
     })
   }, [companies, search, serviceFilter, statusFilter])
+
+  const { page, pageCount, setPage, pageItems } = usePagination(filtered, PAGE_SIZE)
 
   return (
     <div>
@@ -73,7 +77,7 @@ export function CompanyList() {
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--color-line)]">
-            {filtered.map((c) => (
+            {pageItems.map((c) => (
               <tr key={c.id} className="hover:bg-[var(--color-paper)]">
                 <td className="px-6 py-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded bg-[color-mix(in_srgb,var(--color-teal)_8%,white)] text-[var(--color-muted)]">
@@ -125,6 +129,12 @@ export function CompanyList() {
           </tbody>
         </table>
       </div>
+      <Pagination
+        page={page}
+        pageCount={pageCount}
+        onChange={setPage}
+        totalLabel={`Showing ${pageItems.length ? (page - 1) * PAGE_SIZE + 1 : 0}–${(page - 1) * PAGE_SIZE + pageItems.length} of ${filtered.length} companies`}
+      />
     </div>
   )
 }
