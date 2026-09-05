@@ -10,6 +10,7 @@ import {
   Button,
   CheckboxGroup,
   Drawer,
+  SearchSelect,
   Modal,
   PageHeader,
   Pagination,
@@ -255,20 +256,23 @@ export function CompanyList() {
         <div>
           <h3 className="mb-3 text-sm font-semibold text-[var(--color-text)]">Location</h3>
           <div className="space-y-4">
-            <CheckboxGroup
+            <SearchSelect
               label="City"
+              placeholder="Search cities..."
               options={cityOptions}
               selected={draftFilters.cities}
               onChange={(cities) => setDraftFilters((prev) => ({ ...prev, cities }))}
             />
-            <CheckboxGroup
+            <SearchSelect
               label="State"
+              placeholder="Search states..."
               options={stateOptions}
               selected={draftFilters.states}
               onChange={(states) => setDraftFilters((prev) => ({ ...prev, states }))}
             />
-            <CheckboxGroup
+            <SearchSelect
               label="Country"
+              placeholder="Search countries..."
               options={countryOptions}
               selected={draftFilters.countries}
               onChange={(countries) => setDraftFilters((prev) => ({ ...prev, countries }))}
@@ -276,8 +280,9 @@ export function CompanyList() {
           </div>
         </div>
 
-        <CheckboxGroup
+        <SearchSelect
           label="Subscribed Services"
+          placeholder="Search services..."
           options={services.map((s) => ({ value: s.id, label: s.name }))}
           selected={draftFilters.serviceIds}
           onChange={(serviceIds) => setDraftFilters((prev) => ({ ...prev, serviceIds }))}
@@ -307,8 +312,9 @@ export function CompanyList() {
           </div>
         </div>
 
-        <CheckboxGroup
+        <SearchSelect
           label="Updated By"
+          placeholder="Search by name..."
           options={updatedByOptions}
           selected={draftFilters.updatedBy}
           onChange={(updatedBy) => setDraftFilters((prev) => ({ ...prev, updatedBy }))}

@@ -309,6 +309,94 @@ export function CheckboxGroup({
   )
 }
 
+/** A searchable multi-select combobox: type to filter options, click to toggle, selections shown as removable pills. */
+export function SearchSelect({
+  label,
+  options,
+  selected,
+  onChange,
+  placeholder = 'Search...',
+  emptyLabel = 'No options available.',
+}: {
+  label: string
+  options: string[] | CheckboxOption[]
+  selected: string[]
+  onChange: (next: string[]) => void
+  placeholder?: string
+  emptyLabel?: string
+}) {
+  const normalized: CheckboxOption[] = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o))
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [])
+
+  const filtered = normalized.filter((o) => o.label.toLowerCase().includes(query.trim().toLowerCase()))
+  const selectedOptions = normalized.filter((o) => selected.includes(o.value))
+
+  function toggle(value: string) {
+    onChange(selected.includes(value) ? selected.filter((v) => v !== value) : [...selected, value])
+  }
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-sm font-medium text-[var(--color-text)]">{label}</span>
+        {selected.length > 0 && (
+          <button type="button" onClick={() => onChange([])} className="text-xs text-[var(--color-teal)] hover:underline">
+            Clear
+          </button>
+        )}
+      </div>
+
+      {selectedOptions.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          {selectedOptions.map((o) => (
+            <span
+              key={o.value}
+              className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--color-teal)_10%,white)] py-0.5 pl-2.5 pr-1.5 text-xs font-medium text-[var(--color-teal-strong)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--color-teal)_25%,white)]"
+            >
+              {o.label}
+              <button type="button" onClick={() => toggle(o.value)} aria-label={`Remove ${o.label}`} className="hover:text-[var(--color-danger)]">
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      <TextInput
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onFocus={() => setOpen(true)}
+        placeholder={placeholder}
+      />
+
+      {open && (
+        <div className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] py-1 shadow-lg">
+          {filtered.length === 0 && <p className="px-3 py-2 text-xs text-[var(--color-muted)]">{emptyLabel}</p>}
+          {filtered.map((option) => (
+            <label
+              key={option.value}
+              className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm text-[var(--color-text)] hover:bg-[color-mix(in_srgb,var(--color-teal)_8%,white)]"
+            >
+              <input type="checkbox" checked={selected.includes(option.value)} onChange={() => toggle(option.value)} />
+              {option.label}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 /** Bottom-right auto-dismissing confirmation toast. Renders nothing while `message` is null. */
 export function Toast({ message, onDismiss }: { message: string | null; onDismiss: () => void }) {
   useEffect(() => {
