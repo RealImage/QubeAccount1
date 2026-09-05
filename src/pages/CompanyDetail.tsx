@@ -140,12 +140,14 @@ export function CompanyDetail() {
                 <th className="py-2 pr-4 font-medium">Email</th>
                 <th className="py-2 pr-4 font-medium">Service(s)</th>
                 <th className="py-2 pr-4 font-medium">Status</th>
+                <th className="py-2 pr-4 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--color-line)]">
               {companyUsers.map((u) => {
                 const membership = u.memberships.find((m) => m.companyId === company.id)!
                 const anyPending = membership.roleAssignments.some((r) => effectiveAccess(company, r) === 'pending')
+                const status = !u.active ? 'Inactive' : company.status === 'Inactive' ? 'Inactive' : anyPending ? 'Pending' : 'Active'
                 return (
                   <tr key={u.id}>
                     <td className="py-3 pr-4 font-medium text-[var(--color-text)]">{u.name}</td>
@@ -154,14 +156,27 @@ export function CompanyDetail() {
                       {membership.roleAssignments.map((r) => serviceName(r.serviceId)).join(', ') || '—'}
                     </td>
                     <td className="py-3 pr-4">
-                      <StatusBadge status={company.status === 'Inactive' ? 'Inactive' : anyPending ? 'Pending' : 'Active'} />
+                      <StatusBadge status={status} />
+                    </td>
+                    <td className="py-3 pr-4 text-right">
+                      <ActionMenu
+                        items={[
+                          { label: 'View User Details', onSelect: () => setDetailsUser(u) },
+                          { label: 'View User Access Audit', onSelect: () => setAuditUser(u) },
+                          {
+                            label: u.active ? 'Deactivate User' : 'Activate User',
+                            onSelect: () => handleToggleActive(u),
+                            destructive: u.active,
+                          },
+                        ]}
+                      />
                     </td>
                   </tr>
                 )
               })}
               {companyUsers.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-[var(--color-muted)]">
+                  <td colSpan={5} className="py-8 text-center text-[var(--color-muted)]">
                     No users yet.
                   </td>
                 </tr>
