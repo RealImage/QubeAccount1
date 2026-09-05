@@ -53,12 +53,6 @@ export function ServiceConfigure() {
             <Row label="Service Name" value={service.name} />
             <Row label="Service URL" value={service.accessUrl} />
             <Row label="Service Description" value={service.description} />
-            <div className="grid grid-cols-2 py-3">
-              <dt className="text-[var(--color-muted)]">Company Eligibility</dt>
-              <dd>
-                <EligibilityBadge eligibility={service.eligibility} />
-              </dd>
-            </div>
             <Row label="Service UUID" value={service.uuid} />
             <Row label="Service Client ID" value={service.clientId} />
             <Row label="Service Token" value="placeholder... (placeholder)" />
