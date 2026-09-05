@@ -1,6 +1,12 @@
 import type { Company } from './types'
+import { chance, pick, pickN, randInt } from './generate'
 
-export const companies: Company[] = [
+// Total active company count the product runs at (~1200), per product
+// guidance. A handful of hand-authored "flagship" companies below stay
+// first for a recognizable demo; the rest are generated deterministically.
+const TOTAL_COMPANIES = 1200
+
+const flagshipCompanies: Company[] = [
   {
     id: 'c-warner',
     legalName: 'Warner Bros. Entertainment',
@@ -163,6 +169,95 @@ export const companies: Company[] = [
     lastUpdated: 'Aug 20, 2026',
   },
 ]
+
+const NAME_PREFIXES = [
+  'Silver', 'Golden', 'Northern', 'Pacific', 'Atlantic', 'Summit', 'Horizon', 'Crescent', 'Union', 'Metro',
+  'Cascade', 'Vantage', 'Lumina', 'Apex', 'Frontier', 'Continental', 'Regal', 'Meridian', 'Solstice', 'Harbor',
+  'Ember', 'Vista', 'Cobalt', 'Amber', 'Ridgeline', 'Sable', 'Falcon', 'Marble', 'Ironwood', 'Blue Ridge',
+  'Redwood', 'Compass', 'Lantern', 'Northstar', 'Wavelength', 'Kindred', 'Beacon', 'Anchor', 'Skyline', 'Granite',
+] as const
+
+const NAME_SUFFIXES = [
+  'Pictures', 'Studios', 'Media', 'Entertainment', 'Cinemas', 'Films', 'Motion Pictures', 'Screen Works',
+  'Vision Media', 'Reel Works', 'Productions', 'Distribution', 'Digital Cinema', 'Film Group', 'Cinema Partners',
+] as const
+
+const LEGAL_SUFFIXES = ['Inc.', 'LLC', 'Ltd.', 'Group', 'Holdings', 'Co.'] as const
+
+const CITIES: Array<{ city: string; state: string; country: string }> = [
+  { city: 'Los Angeles', state: 'CA', country: 'USA' },
+  { city: 'New York', state: 'NY', country: 'USA' },
+  { city: 'Atlanta', state: 'GA', country: 'USA' },
+  { city: 'Chicago', state: 'IL', country: 'USA' },
+  { city: 'Austin', state: 'TX', country: 'USA' },
+  { city: 'Toronto', state: 'ON', country: 'Canada' },
+  { city: 'Vancouver', state: 'BC', country: 'Canada' },
+  { city: 'London', state: '', country: 'UK' },
+  { city: 'Manchester', state: '', country: 'UK' },
+  { city: 'Paris', state: '', country: 'France' },
+  { city: 'Berlin', state: '', country: 'Germany' },
+  { city: 'Madrid', state: '', country: 'Spain' },
+  { city: 'Rome', state: '', country: 'Italy' },
+  { city: 'Mumbai', state: 'MH', country: 'India' },
+  { city: 'Chennai', state: 'TN', country: 'India' },
+  { city: 'Bengaluru', state: 'KA', country: 'India' },
+  { city: 'Singapore', state: '', country: 'Singapore' },
+  { city: 'Sydney', state: 'NSW', country: 'Australia' },
+  { city: 'Tokyo', state: '', country: 'Japan' },
+  { city: 'Seoul', state: '', country: 'South Korea' },
+  { city: 'Mexico City', state: '', country: 'Mexico' },
+  { city: 'São Paulo', state: '', country: 'Brazil' },
+  { city: 'Dubai', state: '', country: 'UAE' },
+  { city: 'Johannesburg', state: '', country: 'South Africa' },
+]
+
+const ALL_ELIGIBLE_SERVICE_IDS = [
+  'qw-distributor', 'qw-exhibitor', 'qw-partner', 'icount', 'moviebuff', 'slate-media',
+  'cheers-exhibitor', 'dc-distributor', 'dc-exhibitor', 'dc-integrator', 'mw-distributor',
+  'mw-exhibitor', 'qube-account', 'qube-cinemas',
+] as const
+
+function generateCompany(index: number): Company {
+  const prefix = pick(NAME_PREFIXES)
+  const suffix = pick(NAME_SUFFIXES)
+  const displayName = `${prefix} ${suffix}`
+  const legalName = `${displayName} ${pick(LEGAL_SUFFIXES)}`
+  const location = pick(CITIES)
+  const domain = `${prefix.toLowerCase().replace(/\s+/g, '')}${suffix.toLowerCase().replace(/\s+/g, '')}.com`
+  const code = `${prefix.slice(0, 3).toUpperCase()}${String(index).padStart(4, '0')}`
+  const monthDay = randInt(1, 28)
+  const month = pick(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+
+  return {
+    id: `c-gen-${index}`,
+    legalName,
+    displayName,
+    code,
+    uuid: `uuid-gen-${index}`,
+    logoUrl: '',
+    status: chance(0.95) ? 'Active' : 'Inactive',
+    type: 'External',
+    contactEmail: `contact@${domain}`,
+    contactPhone: `555-${String(randInt(1000, 9999))}`,
+    website: `https://${domain}`,
+    address: { street: `${randInt(1, 999)} ${pick(['Main St', 'Studio Blvd', 'Broadway', 'Market St', 'Park Ave'])}`, city: location.city, state: location.state, zip: '', country: location.country },
+    emailDomains: [domain],
+    excludedDomains: ['gmail.com', 'outlook.com'],
+    onlyDomainUser: chance(0.5),
+    autoAddDomainUsers: chance(0.7),
+    billingInfo: '',
+    deliveryInfo: '',
+    notes: '',
+    subscribedServiceIds: pickN(ALL_ELIGIBLE_SERVICE_IDS, randInt(1, 4)),
+    lastUpdated: `${month} ${monthDay}, 2026`,
+  }
+}
+
+const generatedCompanies: Company[] = Array.from({ length: TOTAL_COMPANIES - flagshipCompanies.length }, (_, i) =>
+  generateCompany(i + 1),
+)
+
+export const companies: Company[] = [...flagshipCompanies, ...generatedCompanies]
 
 export function companyById(id: string) {
   return companies.find((c) => c.id === id)

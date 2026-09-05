@@ -308,6 +308,22 @@ export function usePagination<T>(items: T[], pageSize: number) {
   return { page: clampedPage, pageCount, setPage, pageItems }
 }
 
+/**
+ * Windowed page numbers: first, last, current ± 1, with `null` gaps
+ * standing in for an ellipsis. Keeps the control a fixed, small width
+ * regardless of how many pages there are (e.g. 240 pages of companies).
+ */
+function paginationRange(page: number, pageCount: number): Array<number | null> {
+  const window = new Set([1, pageCount, page - 1, page, page + 1])
+  const pages = [...window].filter((p) => p >= 1 && p <= pageCount).sort((a, b) => a - b)
+  const withGaps: Array<number | null> = []
+  pages.forEach((p, i) => {
+    if (i > 0 && p - pages[i - 1] > 1) withGaps.push(null)
+    withGaps.push(p)
+  })
+  return withGaps
+}
+
 export function Pagination({
   page,
   pageCount,
@@ -320,8 +336,9 @@ export function Pagination({
   totalLabel?: string
 }) {
   if (pageCount <= 1) return null
+  const range = paginationRange(page, pageCount)
   return (
-    <div className="mt-4 flex items-center justify-between">
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
       <p className="text-sm text-[var(--color-muted)]">{totalLabel}</p>
       <div className="flex items-center gap-1">
         <button
@@ -333,22 +350,28 @@ export function Pagination({
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
-        {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
-          <button
-            key={p}
-            type="button"
-            onClick={() => onChange(p)}
-            aria-current={p === page ? 'page' : undefined}
-            className={clsx(
-              'inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-medium',
-              p === page
-                ? 'bg-[var(--color-teal)] text-white'
-                : 'border border-[var(--color-line)] text-[var(--color-text)] hover:border-[var(--color-teal)] hover:text-[var(--color-teal)]',
-            )}
-          >
-            {p}
-          </button>
-        ))}
+        {range.map((p, i) =>
+          p === null ? (
+            <span key={`gap-${i}`} className="px-1 text-sm text-[var(--color-muted)]">
+              &hellip;
+            </span>
+          ) : (
+            <button
+              key={p}
+              type="button"
+              onClick={() => onChange(p)}
+              aria-current={p === page ? 'page' : undefined}
+              className={clsx(
+                'inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-medium',
+                p === page
+                  ? 'bg-[var(--color-teal)] text-white'
+                  : 'border border-[var(--color-line)] text-[var(--color-text)] hover:border-[var(--color-teal)] hover:text-[var(--color-teal)]',
+              )}
+            >
+              {p}
+            </button>
+          ),
+        )}
         <button
           type="button"
           disabled={page >= pageCount}

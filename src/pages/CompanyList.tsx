@@ -7,7 +7,7 @@ import { auditLog } from '../data/audit'
 import type { Company } from '../data/types'
 import { ActionMenu, Button, Modal, PageHeader, Pagination, Select, StatusBadge, TextInput, usePagination } from '../components/ui'
 
-const PAGE_SIZE = 5
+const PAGE_SIZE = 20
 
 export function CompanyList() {
   const navigate = useNavigate()

@@ -35,7 +35,12 @@ Microsoft Entra / Descope and out of scope here).
 - `src/data/types.ts` — domain types (Company, User, Service, RoleAssignment, …)
 - `src/data/access.ts` — effective-access logic, spec §3.1 and §5.3, as pure functions
 - `src/data/services.ts` — service catalog, spec §2.3
-- `src/data/companies.ts`, `src/data/users.ts`, `src/data/audit.ts` — seed data
+- `src/data/companies.ts`, `src/data/users.ts`, `src/data/audit.ts` — seed data.
+  Companies and users are a handful of hand-authored "flagship" records
+  followed by ~1200 companies / ~13,000 users generated deterministically
+  (`src/data/generate.ts`, seeded PRNG) to match the product's real scale.
+  Portal Users stay hand-authored only — the generated bulk users are never
+  portal users.
 - `src/data/store.tsx` — React context holding mutable in-memory state
 - `src/components/` — shared layout (`Sidebar`, `Layout`) and UI primitives (`ui.tsx`)
 - `src/pages/` — one file per route (Dashboard, CompanyList, CompanyForm,
