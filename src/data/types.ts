@@ -46,6 +46,11 @@ export interface ServiceRole {
   name: string
   description: string
   status: 'Active' | 'Inactive'
+  // Which company types this role can be assigned to — independent of, and
+  // never broader than, the parent Service's own `eligibility`. Most roles
+  // are 'all'; a service's more privileged roles (e.g. Admin) are typically
+  // restricted to 'internal'.
+  eligibility: ServiceEligibility
   updatedOn: string
   updatedBy: string
 }

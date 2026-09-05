@@ -12,7 +12,7 @@ const navItems = [
 
 export function Sidebar() {
   return (
-    <aside className="flex h-screen w-64 flex-shrink-0 flex-col bg-[var(--color-ink)] text-[var(--color-ink-muted)]">
+    <aside className="sticky top-0 flex h-screen w-64 flex-shrink-0 flex-col self-start overflow-y-auto bg-[var(--color-ink)] text-[var(--color-ink-muted)]">
       <div className="flex items-center gap-2.5 px-5 py-6">
         <span className="flex h-7 w-7 items-center justify-center rounded-sm border border-[var(--color-gold)] font-[family-name:var(--font-display)] text-sm font-semibold text-[var(--color-gold)]">
           Q
