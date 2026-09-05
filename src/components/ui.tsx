@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { CheckCircle2, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { CheckCircle2, ChevronLeft, ChevronRight, MoreVertical, X } from 'lucide-react'
 import clsx from 'clsx'
 
 export function StatusBadge({ status }: { status: 'Active' | 'Inactive' | 'Pending' | 'Invited' }) {
@@ -219,6 +219,73 @@ export function Toast({ message, onDismiss }: { message: string | null; onDismis
     <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-lg border border-[var(--color-line)] bg-[var(--color-ink)] px-4 py-3 text-sm font-medium text-white shadow-lg">
       <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-[var(--color-teal)]" />
       {message}
+    </div>
+  )
+}
+
+export interface ActionMenuItem {
+  label: string
+  onSelect: () => void
+  destructive?: boolean
+}
+
+/** Row-level "⋮" dropdown menu. Closes on outside click, Escape, or item select. */
+export function ActionMenu({ items }: { items: ActionMenuItem[] }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onPointerDown = (e: PointerEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener('pointerdown', onPointerDown)
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDown)
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
+
+  return (
+    <div ref={ref} className="relative inline-block text-left">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Actions"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-muted)] hover:bg-[var(--color-paper)] hover:text-[var(--color-text)]"
+      >
+        <MoreVertical className="h-4 w-4" />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 z-40 mt-1 w-52 overflow-hidden rounded-md border border-[var(--color-line)] bg-[var(--color-surface)] py-1"
+        >
+          {items.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false)
+                item.onSelect()
+              }}
+              className={clsx(
+                'block w-full px-4 py-2 text-left text-sm hover:bg-[var(--color-paper)]',
+                item.destructive ? 'text-[var(--color-danger)]' : 'text-[var(--color-text)]',
+              )}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

@@ -5,15 +5,19 @@ import clsx from 'clsx'
 import { useStore, serviceName } from '../data/store'
 import { services } from '../data/services'
 import { effectiveAccess } from '../data/access'
-import { Button, Card, StatusBadge } from '../components/ui'
+import type { User } from '../data/types'
+import { ActionMenu, Button, Card, Modal, StatusBadge, Toast } from '../components/ui'
 
 type Tab = 'details' | 'users' | 'subscriptions'
 
 export function CompanyDetail() {
   const { id } = useParams()
-  const { companies, users, setCompanySubscriptions } = useStore()
+  const { companies, users, setCompanySubscriptions, setUserActive } = useStore()
   const [tab, setTab] = useState<Tab>('details')
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null)
+  const [detailsUser, setDetailsUser] = useState<User | null>(null)
+  const [auditUser, setAuditUser] = useState<User | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
 
   const company = companies.find((c) => c.id === id)
   if (!company) return <p className="text-[var(--color-muted)]">Company not found.</p>
@@ -37,6 +41,11 @@ export function CompanyDetail() {
       company!.id,
       has ? company!.subscribedServiceIds.filter((s) => s !== serviceId) : [...company!.subscribedServiceIds, serviceId],
     )
+  }
+
+  function handleToggleActive(user: User) {
+    setUserActive(user.id, !user.active)
+    setToast(`${user.name} ${user.active ? 'deactivated' : 'activated'}.`)
   }
 
   return (
@@ -131,12 +140,14 @@ export function CompanyDetail() {
                 <th className="py-2 pr-4 font-medium">Email</th>
                 <th className="py-2 pr-4 font-medium">Service(s)</th>
                 <th className="py-2 pr-4 font-medium">Status</th>
+                <th className="py-2 pr-4 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--color-line)]">
               {companyUsers.map((u) => {
                 const membership = u.memberships.find((m) => m.companyId === company.id)!
                 const anyPending = membership.roleAssignments.some((r) => effectiveAccess(company, r) === 'pending')
+                const status = !u.active ? 'Inactive' : company.status === 'Inactive' ? 'Inactive' : anyPending ? 'Pending' : 'Active'
                 return (
                   <tr key={u.id}>
                     <td className="py-3 pr-4 font-medium text-[var(--color-text)]">{u.name}</td>
@@ -145,14 +156,27 @@ export function CompanyDetail() {
                       {membership.roleAssignments.map((r) => serviceName(r.serviceId)).join(', ') || '—'}
                     </td>
                     <td className="py-3 pr-4">
-                      <StatusBadge status={company.status === 'Inactive' ? 'Inactive' : anyPending ? 'Pending' : 'Active'} />
+                      <StatusBadge status={status} />
+                    </td>
+                    <td className="py-3 pr-4 text-right">
+                      <ActionMenu
+                        items={[
+                          { label: 'View User Details', onSelect: () => setDetailsUser(u) },
+                          { label: 'View User Access Audit', onSelect: () => setAuditUser(u) },
+                          {
+                            label: u.active ? 'Deactivate User' : 'Activate User',
+                            onSelect: () => handleToggleActive(u),
+                            destructive: u.active,
+                          },
+                        ]}
+                      />
                     </td>
                   </tr>
                 )
               })}
               {companyUsers.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-[var(--color-muted)]">
+                  <td colSpan={5} className="py-8 text-center text-[var(--color-muted)]">
                     No users yet.
                   </td>
                 </tr>
@@ -218,21 +242,43 @@ export function CompanyDetail() {
                     <th className="py-2 pr-4 font-medium">User Name</th>
                     <th className="py-2 pr-4 font-medium">Email</th>
                     <th className="py-2 pr-4 font-medium">Role in Service</th>
+                    <th className="py-2 pr-4 font-medium">Status</th>
+                    <th className="py-2 pr-4 font-medium text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--color-line)]">
-                  {usersForActiveService.map(({ user, assignment }) => (
-                    <tr key={user.id}>
-                      <td className="py-3 pr-4 font-medium text-[var(--color-text)]">{user.name}</td>
-                      <td className="py-3 pr-4 text-[var(--color-muted)]">{user.email}</td>
-                      <td className="py-3 pr-4">
-                        <span className="rounded-full bg-[var(--color-ink)] px-2.5 py-0.5 text-xs text-white">{assignment.roleId}</span>
-                      </td>
-                    </tr>
-                  ))}
+                  {usersForActiveService.map(({ user, assignment }) => {
+                    const access = effectiveAccess(company, assignment)
+                    const status = !user.active ? 'Inactive' : access === 'allowed' ? 'Active' : access === 'pending' ? 'Pending' : 'Inactive'
+                    return (
+                      <tr key={user.id}>
+                        <td className="py-3 pr-4 font-medium text-[var(--color-text)]">{user.name}</td>
+                        <td className="py-3 pr-4 text-[var(--color-muted)]">{user.email}</td>
+                        <td className="py-3 pr-4">
+                          <span className="rounded-full bg-[var(--color-ink)] px-2.5 py-0.5 text-xs text-white">{assignment.roleId}</span>
+                        </td>
+                        <td className="py-3 pr-4">
+                          <StatusBadge status={status} />
+                        </td>
+                        <td className="py-3 pr-4 text-right">
+                          <ActionMenu
+                            items={[
+                              { label: 'View User Details', onSelect: () => setDetailsUser(user) },
+                              { label: 'View User Access Audit', onSelect: () => setAuditUser(user) },
+                              {
+                                label: user.active ? 'Deactivate User' : 'Activate User',
+                                onSelect: () => handleToggleActive(user),
+                                destructive: user.active,
+                              },
+                            ]}
+                          />
+                        </td>
+                      </tr>
+                    )
+                  })}
                   {usersForActiveService.length === 0 && (
                     <tr>
-                      <td colSpan={3} className="py-8 text-center text-[var(--color-muted)]">
+                      <td colSpan={5} className="py-8 text-center text-[var(--color-muted)]">
                         No users assigned to this service.
                       </td>
                     </tr>
@@ -243,6 +289,76 @@ export function CompanyDetail() {
           </div>
         </div>
       )}
+
+      <Modal open={detailsUser !== null} onClose={() => setDetailsUser(null)} title="User Details">
+        {detailsUser && (
+          <dl className="space-y-3 text-sm">
+            <UserDetailRow label="Name" value={detailsUser.name} />
+            <UserDetailRow label="Email" value={detailsUser.email} />
+            <UserDetailRow label="Portal User" value={detailsUser.isPortalUser ? 'Yes' : 'No'} />
+            <UserDetailRow label="Account Status" value={detailsUser.active ? 'Active' : 'Deactivated'} />
+            <div>
+              <dt className="mb-1 text-[var(--color-muted)]">Company Memberships</dt>
+              <dd className="space-y-2">
+                {detailsUser.memberships.map((m) => {
+                  const memberCompany = companies.find((c) => c.id === m.companyId)
+                  return (
+                    <div key={m.companyId} className="rounded-md border border-[var(--color-line)] p-2.5">
+                      <p className="font-medium text-[var(--color-text)]">{memberCompany?.displayName ?? m.companyId}</p>
+                      <ul className="mt-1 space-y-0.5">
+                        {m.roleAssignments.map((r) => (
+                          <li key={r.serviceId} className="flex items-center justify-between text-[var(--color-muted)]">
+                            <span>
+                              {serviceName(r.serviceId)} — {r.roleId}
+                            </span>
+                            <StatusBadge status={r.inviteStatus === 'Accepted' ? 'Active' : 'Pending'} />
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )
+                })}
+              </dd>
+            </div>
+          </dl>
+        )}
+      </Modal>
+
+      <Modal open={auditUser !== null} onClose={() => setAuditUser(null)} title="User Access Audit">
+        {auditUser && (
+          <div className="max-h-96 space-y-3 overflow-y-auto text-sm">
+            {auditUser.memberships.flatMap((m) => {
+              const memberCompany = companies.find((c) => c.id === m.companyId)
+              return m.roleAssignments.map((r) => (
+                <div key={`${m.companyId}-${r.serviceId}`} className="border-b border-[var(--color-line)] pb-2 last:border-0">
+                  <p className="text-[var(--color-text)]">
+                    Role <span className="font-medium">{r.roleId}</span> in {serviceName(r.serviceId)} for{' '}
+                    <span className="font-medium">{memberCompany?.displayName ?? m.companyId}</span>
+                  </p>
+                  <p className="text-xs text-[var(--color-muted)]">
+                    Invite {r.inviteStatus.toLowerCase()} · effective access:{' '}
+                    {effectiveAccess(memberCompany, r) === 'allowed' ? 'allowed' : effectiveAccess(memberCompany, r) === 'pending' ? 'pending acceptance' : 'denied'}
+                  </p>
+                </div>
+              ))
+            })}
+            {auditUser.memberships.every((m) => m.roleAssignments.length === 0) && (
+              <p className="text-[var(--color-muted)]">No access events recorded for this user.</p>
+            )}
+          </div>
+        )}
+      </Modal>
+
+      <Toast message={toast} onDismiss={() => setToast(null)} />
+    </div>
+  )
+}
+
+function UserDetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <dt className="text-[var(--color-muted)]">{label}</dt>
+      <dd className="font-medium text-[var(--color-text)]">{value}</dd>
     </div>
   )
 }
