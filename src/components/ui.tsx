@@ -205,6 +205,110 @@ export function Modal({
   )
 }
 
+/** Right-side sliding panel, for filter builders and similar drill-in forms. */
+export function Drawer({
+  open,
+  onClose,
+  title,
+  children,
+  footer,
+}: {
+  open: boolean
+  onClose: () => void
+  title: string
+  children: ReactNode
+  footer?: ReactNode
+}) {
+  useEffect(() => {
+    if (!open) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [open, onClose])
+
+  if (!open) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex justify-end bg-[color-mix(in_srgb,var(--color-ink)_55%,transparent)]"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        onClick={(e) => e.stopPropagation()}
+        className="flex h-full w-full max-w-sm flex-col border-l border-[var(--color-line)] bg-[var(--color-surface)]"
+      >
+        <div className="flex items-center justify-between border-b border-[var(--color-line)] px-6 py-4">
+          <h2 className="font-[family-name:var(--font-display)] text-lg font-medium text-[var(--color-text)]">{title}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="text-[var(--color-muted)] hover:text-[var(--color-text)]"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">{children}</div>
+        {footer && <div className="border-t border-[var(--color-line)] px-6 py-4">{footer}</div>}
+      </div>
+    </div>
+  )
+}
+
+export interface CheckboxOption {
+  value: string
+  label: string
+}
+
+/** A labeled checkbox list for multi-select filters, with a "Clear" affordance when non-empty. */
+export function CheckboxGroup({
+  label,
+  options,
+  selected,
+  onChange,
+  emptyLabel = 'No options available.',
+}: {
+  label: string
+  options: string[] | CheckboxOption[]
+  selected: string[]
+  onChange: (next: string[]) => void
+  emptyLabel?: string
+}) {
+  const normalized: CheckboxOption[] = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o))
+
+  function toggle(value: string) {
+    onChange(selected.includes(value) ? selected.filter((o) => o !== value) : [...selected, value])
+  }
+
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-sm font-medium text-[var(--color-text)]">{label}</span>
+        {selected.length > 0 && (
+          <button type="button" onClick={() => onChange([])} className="text-xs text-[var(--color-teal)] hover:underline">
+            Clear
+          </button>
+        )}
+      </div>
+      <div className="max-h-40 space-y-1.5 overflow-y-auto pr-1">
+        {normalized.map((option) => (
+          <label key={option.value} className="flex items-center gap-2 text-sm text-[var(--color-muted)]">
+            <input type="checkbox" checked={selected.includes(option.value)} onChange={() => toggle(option.value)} />
+            {option.label}
+          </label>
+        ))}
+        {normalized.length === 0 && <p className="text-xs text-[var(--color-muted)]">{emptyLabel}</p>}
+      </div>
+    </div>
+  )
+}
+
 /** Bottom-right auto-dismissing confirmation toast. Renders nothing while `message` is null. */
 export function Toast({ message, onDismiss }: { message: string | null; onDismiss: () => void }) {
   useEffect(() => {

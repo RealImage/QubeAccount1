@@ -1,20 +1,57 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Building2, Users, Package, UserPlus, Shield } from 'lucide-react'
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { companies } from '../data/companies'
 import { users } from '../data/users'
 import { services } from '../data/services'
 import { auditLog } from '../data/audit'
 import { Button, Card, PageHeader } from '../components/ui'
 
-const growthData = [
-  { month: 'January', companies: 180, users: 90 },
-  { month: 'February', companies: 300, users: 210 },
-  { month: 'March', companies: 260, users: 110 },
-  { month: 'April', companies: 80, users: 190 },
-  { month: 'May', companies: 210, users: 120 },
-  { month: 'June', companies: 200, users: 140 },
-]
+function monthKey(dateStr: string) {
+  const d = new Date(dateStr)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+function monthLabel(key: string) {
+  const [year, month] = key.split('-').map(Number)
+  return new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+}
+
+/**
+ * Cumulative companies/users onboarded per month, derived from the actual
+ * dataset (each company's lastUpdated as an onboarding-date proxy, since
+ * there's no separate "created" timestamp) rather than a hand-picked toy
+ * series — so the chart tracks the real ~1,200 company / ~13,000 user scale.
+ */
+function useGrowthData() {
+  return useMemo(() => {
+    const userCountByCompany = new Map<string, number>()
+    for (const u of users) {
+      for (const m of u.memberships) {
+        userCountByCompany.set(m.companyId, (userCountByCompany.get(m.companyId) ?? 0) + 1)
+      }
+    }
+
+    const buckets = new Map<string, { companies: number; users: number }>()
+    for (const c of companies) {
+      const key = monthKey(c.lastUpdated)
+      const bucket = buckets.get(key) ?? { companies: 0, users: 0 }
+      bucket.companies += 1
+      bucket.users += userCountByCompany.get(c.id) ?? 0
+      buckets.set(key, bucket)
+    }
+
+    let cumulativeCompanies = 0
+    let cumulativeUsers = 0
+    return [...buckets.keys()].sort().map((key) => {
+      const bucket = buckets.get(key)!
+      cumulativeCompanies += bucket.companies
+      cumulativeUsers += bucket.users
+      return { month: monthLabel(key), companies: cumulativeCompanies, users: cumulativeUsers }
+    })
+  }, [])
+}
 
 function timeAgo(iso: string) {
   const diffMs = Date.now() - new Date(iso).getTime()
@@ -23,6 +60,8 @@ function timeAgo(iso: string) {
 }
 
 export function Dashboard() {
+  const growthData = useGrowthData()
+
   return (
     <div>
       <PageHeader
@@ -48,7 +87,9 @@ export function Dashboard() {
             <span className="text-sm text-[var(--color-muted)]">Total Companies</span>
             <Building2 className="h-5 w-5 text-[var(--color-teal)]" />
           </div>
-          <div className="mt-2 font-[family-name:var(--font-display)] text-3xl font-medium text-[var(--color-text)]">{companies.length}</div>
+          <div className="mt-2 font-[family-name:var(--font-display)] text-3xl font-medium text-[var(--color-text)]">
+            {companies.length.toLocaleString()}
+          </div>
           <p className="mt-1 text-sm text-[var(--color-muted)]">All registered companies</p>
         </Card>
         <Card>
@@ -56,7 +97,9 @@ export function Dashboard() {
             <span className="text-sm text-[var(--color-muted)]">Total Users</span>
             <Users className="h-5 w-5 text-[var(--color-teal)]" />
           </div>
-          <div className="mt-2 font-[family-name:var(--font-display)] text-3xl font-medium text-[var(--color-text)]">{users.length}</div>
+          <div className="mt-2 font-[family-name:var(--font-display)] text-3xl font-medium text-[var(--color-text)]">
+            {users.length.toLocaleString()}
+          </div>
           <p className="mt-1 text-sm text-[var(--color-muted)]">Across all companies and portal</p>
         </Card>
         <Card>
@@ -72,17 +115,49 @@ export function Dashboard() {
       <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <h2 className="font-[family-name:var(--font-display)] text-lg font-medium text-[var(--color-text)]">Growth Trends</h2>
-          <p className="mb-4 text-sm text-[var(--color-muted)]">Company and User Growth Over Time</p>
+          <p className="mb-4 text-sm text-[var(--color-muted)]">
+            Cumulative companies and users onboarded, {growthData[0]?.month}–{growthData[growthData.length - 1]?.month}
+          </p>
           <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={growthData}>
+            <AreaChart data={growthData} margin={{ left: 4, right: 8 }}>
+              <defs>
+                <linearGradient id="companiesFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#1c7c73" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#1c7c73" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="usersFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#c89b3c" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#c89b3c" stopOpacity={0} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e1d6" />
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#6e6f76' }} stroke="#e5e1d6" />
-              <YAxis tick={{ fontSize: 12, fill: '#6e6f76' }} stroke="#e5e1d6" />
-              <Tooltip contentStyle={{ borderColor: '#e5e1d6', borderRadius: 8, fontSize: 13 }} />
+              <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#6e6f76' }} stroke="#e5e1d6" interval="preserveStartEnd" />
+              <YAxis yAxisId="companies" tick={{ fontSize: 12, fill: '#1c7c73' }} stroke="#e5e1d6" width={44} />
+              <YAxis yAxisId="users" orientation="right" tick={{ fontSize: 12, fill: '#a67a26' }} stroke="#e5e1d6" width={50} />
+              <Tooltip
+                contentStyle={{ borderColor: '#e5e1d6', borderRadius: 8, fontSize: 13 }}
+                formatter={(value) => (typeof value === 'number' ? value.toLocaleString() : value)}
+              />
               <Legend wrapperStyle={{ fontSize: 13 }} />
-              <Bar dataKey="companies" name="companies" fill="#1c7c73" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="users" name="users" fill="#c89b3c" radius={[4, 4, 0, 0]} />
-            </BarChart>
+              <Area
+                yAxisId="companies"
+                type="monotone"
+                dataKey="companies"
+                name="companies"
+                stroke="#1c7c73"
+                fill="url(#companiesFill)"
+                strokeWidth={2}
+              />
+              <Area
+                yAxisId="users"
+                type="monotone"
+                dataKey="users"
+                name="users"
+                stroke="#c89b3c"
+                fill="url(#usersFill)"
+                strokeWidth={2}
+              />
+            </AreaChart>
           </ResponsiveContainer>
         </Card>
 

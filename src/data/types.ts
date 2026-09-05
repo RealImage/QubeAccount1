@@ -34,6 +34,7 @@ export interface Company {
   notes: string
   subscribedServiceIds: string[]
   lastUpdated: string
+  updatedBy: string
 }
 
 // Every product's set of "products" and their offered services, per spec §2.3.

@@ -29,6 +29,7 @@ const flagshipCompanies: Company[] = [
     notes: '',
     subscribedServiceIds: ['cinemasdb-admin', 'qube-account'],
     lastUpdated: 'Aug 20, 2026',
+    updatedBy: 'Peter Pan',
   },
   {
     id: 'c-a24',
@@ -52,6 +53,7 @@ const flagshipCompanies: Company[] = [
     notes: '',
     subscribedServiceIds: ['icount', 'moviebuff', 'qube-account'],
     lastUpdated: 'Aug 19, 2026',
+    updatedBy: 'Nina Rao',
   },
   {
     id: 'c-studiocanal',
@@ -75,6 +77,7 @@ const flagshipCompanies: Company[] = [
     notes: '',
     subscribedServiceIds: ['moviebuff', 'qube-cinemas', 'qube-account', 'icount'],
     lastUpdated: 'Aug 18, 2026',
+    updatedBy: 'Peter Pan',
   },
   {
     id: 'c-pixar',
@@ -98,6 +101,7 @@ const flagshipCompanies: Company[] = [
     notes: '',
     subscribedServiceIds: ['qube-cinemas', 'qube-account'],
     lastUpdated: 'Aug 17, 2026',
+    updatedBy: 'Nina Rao',
   },
   {
     id: 'c-universal',
@@ -121,6 +125,7 @@ const flagshipCompanies: Company[] = [
     notes: '',
     subscribedServiceIds: ['slate-media', 'qw-admin', 'icount'],
     lastUpdated: 'Aug 16, 2026',
+    updatedBy: 'Peter Pan',
   },
   {
     id: 'c-neon',
@@ -144,6 +149,7 @@ const flagshipCompanies: Company[] = [
     notes: '',
     subscribedServiceIds: ['qw-admin', 'qw-distributor', 'icount', 'moviebuff'],
     lastUpdated: 'Aug 15, 2026',
+    updatedBy: 'Nina Rao',
   },
   {
     id: 'c-qube-internal',
@@ -167,6 +173,7 @@ const flagshipCompanies: Company[] = [
     notes: 'Internal company — Company Management access is restricted to members of this company (spec §7).',
     subscribedServiceIds: ['company-management', 'qube-account', 'qw-admin', 'icount-admin', 'cinemasdb-admin'],
     lastUpdated: 'Aug 20, 2026',
+    updatedBy: 'Peter Pan',
   },
 ]
 
@@ -211,6 +218,8 @@ const CITIES: Array<{ city: string; state: string; country: string }> = [
   { city: 'Johannesburg', state: '', country: 'South Africa' },
 ]
 
+const UPDATERS = ['Peter Pan', 'Nina Rao', 'System'] as const
+
 const ALL_ELIGIBLE_SERVICE_IDS = [
   'qw-distributor', 'qw-exhibitor', 'qw-partner', 'icount', 'moviebuff', 'slate-media',
   'cheers-exhibitor', 'dc-distributor', 'dc-exhibitor', 'dc-integrator', 'mw-distributor',
@@ -227,6 +236,7 @@ function generateCompany(index: number): Company {
   const code = `${prefix.slice(0, 3).toUpperCase()}${String(index).padStart(4, '0')}`
   const monthDay = randInt(1, 28)
   const month = pick(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+  const year = pick([2025, 2026])
 
   return {
     id: `c-gen-${index}`,
@@ -249,7 +259,8 @@ function generateCompany(index: number): Company {
     deliveryInfo: '',
     notes: '',
     subscribedServiceIds: pickN(ALL_ELIGIBLE_SERVICE_IDS, randInt(1, 4)),
-    lastUpdated: `${month} ${monthDay}, 2026`,
+    lastUpdated: `${month} ${monthDay}, ${year}`,
+    updatedBy: pick(UPDATERS),
   }
 }
 
