@@ -16,6 +16,18 @@ export function StatusBadge({ status }: { status: 'Active' | 'Inactive' | 'Pendi
   )
 }
 
+export function EligibilityBadge({ eligibility }: { eligibility: 'all' | 'internal' }) {
+  return eligibility === 'internal' ? (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-[color-mix(in_srgb,var(--color-gold)_16%,white)] px-2.5 py-0.5 text-xs font-medium text-[color-mix(in_srgb,var(--color-gold)_70%,black)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--color-gold)_35%,white)]">
+      Internal
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-[color-mix(in_srgb,var(--color-teal)_10%,white)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-teal-strong)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--color-teal)_25%,white)]">
+      All
+    </span>
+  )
+}
+
 export function Pill({ children }: { children: ReactNode }) {
   return (
     <span className="inline-flex items-center rounded-full bg-[var(--color-ink)] px-3 py-1 font-mono text-xs text-white">

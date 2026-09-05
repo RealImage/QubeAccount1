@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, FileText, Users } from 'lucide-react'
 import clsx from 'clsx'
 import { serviceById } from '../data/services'
-import { StatusBadge } from '../components/ui'
+import { EligibilityBadge, StatusBadge } from '../components/ui'
 
 type Tab = 'details' | 'roles'
 
@@ -53,6 +53,12 @@ export function ServiceConfigure() {
             <Row label="Service Name" value={service.name} />
             <Row label="Service URL" value={service.accessUrl} />
             <Row label="Service Description" value={service.description} />
+            <div className="grid grid-cols-2 py-3">
+              <dt className="text-[var(--color-muted)]">Company Eligibility</dt>
+              <dd>
+                <EligibilityBadge eligibility={service.eligibility} />
+              </dd>
+            </div>
             <Row label="Service UUID" value={service.uuid} />
             <Row label="Service Client ID" value={service.clientId} />
             <Row label="Service Token" value="placeholder... (placeholder)" />
@@ -73,6 +79,7 @@ export function ServiceConfigure() {
               <tr>
                 <th className="py-2 pr-4 font-medium">Role Name</th>
                 <th className="py-2 pr-4 font-medium">Description</th>
+                <th className="py-2 pr-4 font-medium">Type</th>
                 <th className="py-2 pr-4 font-medium">Status</th>
                 <th className="py-2 pr-4 font-medium">Updated On</th>
                 <th className="py-2 pr-4 font-medium">Updated By</th>
@@ -83,6 +90,9 @@ export function ServiceConfigure() {
                 <tr key={r.id}>
                   <td className="py-3 pr-4 font-medium text-[var(--color-text)]">{r.name}</td>
                   <td className="py-3 pr-4 text-[var(--color-muted)]">{r.description}</td>
+                  <td className="py-3 pr-4">
+                    <EligibilityBadge eligibility={r.eligibility} />
+                  </td>
                   <td className="py-3 pr-4">
                     <StatusBadge status={r.status} />
                   </td>
