@@ -1,35 +1,119 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Building2, Plus, Search } from 'lucide-react'
+import { Building2, Plus, Search, SlidersHorizontal } from 'lucide-react'
 import { useStore, serviceName } from '../data/store'
 import { services } from '../data/services'
 import { auditLog } from '../data/audit'
-import type { Company } from '../data/types'
-import { ActionMenu, Button, Modal, PageHeader, Pagination, Select, StatusBadge, TextInput, usePagination } from '../components/ui'
+import type { Company, CompanyStatus } from '../data/types'
+import {
+  ActionMenu,
+  Button,
+  CheckboxGroup,
+  Drawer,
+  Modal,
+  PageHeader,
+  Pagination,
+  StatusBadge,
+  TextInput,
+  usePagination,
+} from '../components/ui'
 
 const PAGE_SIZE = 20
+
+interface Filters {
+  cities: string[]
+  states: string[]
+  countries: string[]
+  serviceIds: string[]
+  statuses: CompanyStatus[]
+  updatedFrom: string
+  updatedTo: string
+  updatedBy: string[]
+}
+
+const emptyFilters: Filters = {
+  cities: [],
+  states: [],
+  countries: [],
+  serviceIds: [],
+  statuses: [],
+  updatedFrom: '',
+  updatedTo: '',
+  updatedBy: [],
+}
+
+function filterCount(f: Filters) {
+  return (
+    f.cities.length +
+    f.states.length +
+    f.countries.length +
+    f.serviceIds.length +
+    f.statuses.length +
+    f.updatedBy.length +
+    (f.updatedFrom ? 1 : 0) +
+    (f.updatedTo ? 1 : 0)
+  )
+}
 
 export function CompanyList() {
   const navigate = useNavigate()
   const { companies } = useStore()
   const [search, setSearch] = useState('')
-  const [serviceFilter, setServiceFilter] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
   const [auditCompany, setAuditCompany] = useState<Company | null>(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [filters, setFilters] = useState<Filters>(emptyFilters)
+  const [draftFilters, setDraftFilters] = useState<Filters>(emptyFilters)
+
+  const cityOptions = useMemo(() => [...new Set(companies.map((c) => c.address.city).filter(Boolean))].sort(), [companies])
+  const stateOptions = useMemo(() => [...new Set(companies.map((c) => c.address.state).filter(Boolean))].sort(), [companies])
+  const countryOptions = useMemo(() => [...new Set(companies.map((c) => c.address.country).filter(Boolean))].sort(), [companies])
+  const updatedByOptions = useMemo(() => [...new Set(companies.map((c) => c.updatedBy).filter(Boolean))].sort(), [companies])
 
   const filtered = useMemo(() => {
+    const from = filters.updatedFrom ? new Date(filters.updatedFrom) : null
+    const to = filters.updatedTo ? new Date(filters.updatedTo) : null
     return companies.filter((c) => {
-      const matchesSearch =
-        !search ||
-        c.displayName.toLowerCase().includes(search.toLowerCase()) ||
-        c.address.city.toLowerCase().includes(search.toLowerCase())
-      const matchesService = !serviceFilter || c.subscribedServiceIds.includes(serviceFilter)
-      const matchesStatus = !statusFilter || c.status === statusFilter
-      return matchesSearch && matchesService && matchesStatus
+      const matchesSearch = !search || c.displayName.toLowerCase().includes(search.toLowerCase())
+      const matchesCity = filters.cities.length === 0 || filters.cities.includes(c.address.city)
+      const matchesState = filters.states.length === 0 || filters.states.includes(c.address.state)
+      const matchesCountry = filters.countries.length === 0 || filters.countries.includes(c.address.country)
+      const matchesServices =
+        filters.serviceIds.length === 0 || filters.serviceIds.some((id) => c.subscribedServiceIds.includes(id))
+      const matchesStatus = filters.statuses.length === 0 || filters.statuses.includes(c.status)
+      const matchesUpdatedBy = filters.updatedBy.length === 0 || filters.updatedBy.includes(c.updatedBy)
+      const updatedDate = new Date(c.lastUpdated)
+      const matchesFrom = !from || updatedDate >= from
+      const matchesTo = !to || updatedDate <= to
+      return (
+        matchesSearch &&
+        matchesCity &&
+        matchesState &&
+        matchesCountry &&
+        matchesServices &&
+        matchesStatus &&
+        matchesUpdatedBy &&
+        matchesFrom &&
+        matchesTo
+      )
     })
-  }, [companies, search, serviceFilter, statusFilter])
+  }, [companies, search, filters])
 
   const { page, pageCount, setPage, pageItems } = usePagination(filtered, PAGE_SIZE)
+  const activeFilterCount = filterCount(filters)
+
+  function openFilters() {
+    setDraftFilters(filters)
+    setFiltersOpen(true)
+  }
+
+  function applyFilters() {
+    setFilters(draftFilters)
+    setFiltersOpen(false)
+  }
+
+  function clearDraftFilters() {
+    setDraftFilters(emptyFilters)
+  }
 
   return (
     <div>
@@ -47,25 +131,15 @@ export function CompanyList() {
         <div className="relative flex-1 min-w-64">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" />
           <TextInput
-            placeholder="Search companies by name, city..."
+            placeholder="Search by company name..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
           />
         </div>
-        <Select value={serviceFilter} onChange={(e) => setServiceFilter(e.target.value)} className="w-56">
-          <option value="">Filter by service</option>
-          {services.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </Select>
-        <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-48">
-          <option value="">Filter by status</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-        </Select>
+        <Button variant="outline" icon={<SlidersHorizontal className="h-4 w-4" />} onClick={openFilters}>
+          Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+        </Button>
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] ">
@@ -164,6 +238,82 @@ export function CompanyList() {
           </div>
         )}
       </Modal>
+
+      <Drawer
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        title="Filters"
+        footer={
+          <div className="flex justify-between gap-3">
+            <Button variant="outline" onClick={clearDraftFilters}>
+              Clear All
+            </Button>
+            <Button onClick={applyFilters}>Apply Filters</Button>
+          </div>
+        }
+      >
+        <div>
+          <h3 className="mb-3 text-sm font-semibold text-[var(--color-text)]">Location</h3>
+          <div className="space-y-4">
+            <CheckboxGroup
+              label="City"
+              options={cityOptions}
+              selected={draftFilters.cities}
+              onChange={(cities) => setDraftFilters((prev) => ({ ...prev, cities }))}
+            />
+            <CheckboxGroup
+              label="State"
+              options={stateOptions}
+              selected={draftFilters.states}
+              onChange={(states) => setDraftFilters((prev) => ({ ...prev, states }))}
+            />
+            <CheckboxGroup
+              label="Country"
+              options={countryOptions}
+              selected={draftFilters.countries}
+              onChange={(countries) => setDraftFilters((prev) => ({ ...prev, countries }))}
+            />
+          </div>
+        </div>
+
+        <CheckboxGroup
+          label="Subscribed Services"
+          options={services.map((s) => ({ value: s.id, label: s.name }))}
+          selected={draftFilters.serviceIds}
+          onChange={(serviceIds) => setDraftFilters((prev) => ({ ...prev, serviceIds }))}
+        />
+
+        <CheckboxGroup
+          label="Status"
+          options={['Active', 'Inactive']}
+          selected={draftFilters.statuses}
+          onChange={(statuses) => setDraftFilters((prev) => ({ ...prev, statuses: statuses as CompanyStatus[] }))}
+        />
+
+        <div>
+          <h3 className="mb-2 text-sm font-medium text-[var(--color-text)]">Updated Between</h3>
+          <div className="flex items-center gap-2">
+            <TextInput
+              type="date"
+              value={draftFilters.updatedFrom}
+              onChange={(e) => setDraftFilters((prev) => ({ ...prev, updatedFrom: e.target.value }))}
+            />
+            <span className="text-[var(--color-muted)]">to</span>
+            <TextInput
+              type="date"
+              value={draftFilters.updatedTo}
+              onChange={(e) => setDraftFilters((prev) => ({ ...prev, updatedTo: e.target.value }))}
+            />
+          </div>
+        </div>
+
+        <CheckboxGroup
+          label="Updated By"
+          options={updatedByOptions}
+          selected={draftFilters.updatedBy}
+          onChange={(updatedBy) => setDraftFilters((prev) => ({ ...prev, updatedBy }))}
+        />
+      </Drawer>
     </div>
   )
 }

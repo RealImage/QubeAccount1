@@ -28,6 +28,7 @@ function emptyCompany(): Company {
     notes: '',
     subscribedServiceIds: [],
     lastUpdated: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+    updatedBy: 'Nina Rao',
   }
 }
 
@@ -62,13 +63,14 @@ export function CompanyForm() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    const lastUpdated = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+    const updated: Company = { ...form, lastUpdated, updatedBy: 'Nina Rao' }
     if (isNew) {
-      addCompany(form)
-      navigate(`/companies/${form.id}`)
+      addCompany(updated)
     } else {
-      updateCompany(form.id, form)
-      navigate(`/companies/${form.id}`)
+      updateCompany(updated.id, updated)
     }
+    navigate(`/companies/${updated.id}`)
   }
 
   return (
