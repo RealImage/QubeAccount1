@@ -13,6 +13,7 @@ interface Store {
   assignRole: (userId: string, companyId: string, assignment: RoleAssignment) => void
   removeRole: (userId: string, companyId: string, serviceId: string) => void
   invitePortalUser: (email: string, roleId: string) => void
+  setUserActive: (userId: string, active: boolean) => void
 }
 
 const INTERNAL_COMPANY_ID = 'c-qube-internal'
@@ -115,11 +116,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             name,
             email,
             isPortalUser: true,
+            active: true,
             memberships: [{ companyId: INTERNAL_COMPANY_ID, roleAssignments: [assignment] }],
           }
           return [...prev, newUser]
         })
       },
+      setUserActive: (userId, active) =>
+        setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, active } : u))),
     }),
     [companies, users],
   )

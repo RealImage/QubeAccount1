@@ -91,6 +91,11 @@ export interface User {
   // Portal Users: internal @qubecinema.com staff with Company Management
   // access (spec §7), distinct from regular company users.
   isPortalUser: boolean
+  // Admin-initiated deactivation of the user themselves, independent of
+  // company status (§5.1) and invite acceptance (§5.3) — an internal admin
+  // can suspend one user's access without touching the company or their
+  // role assignments. Defaults to true (active) for all seed users.
+  active: boolean
 }
 
 export type AuditAction =

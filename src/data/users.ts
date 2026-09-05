@@ -6,6 +6,7 @@ export const users: User[] = [
     name: 'Alice Smith',
     email: 'alice.smith@warnerbrosentertainment.com',
     isPortalUser: false,
+    active: true,
     memberships: [
       {
         companyId: 'c-warner',
@@ -21,6 +22,7 @@ export const users: User[] = [
     name: 'Bob Jones',
     email: 'bob.jones@a24films.com',
     isPortalUser: false,
+    active: true,
     memberships: [
       {
         companyId: 'c-a24',
@@ -37,6 +39,7 @@ export const users: User[] = [
     name: 'Charlie Williams',
     email: 'charlie.williams@a24films.com',
     isPortalUser: false,
+    active: true,
     memberships: [
       {
         companyId: 'c-a24',
@@ -52,6 +55,7 @@ export const users: User[] = [
     name: 'Quentin Garcia',
     email: 'quentin.garcia@warnerbrosentertainment.com',
     isPortalUser: false,
+    active: true,
     memberships: [
       {
         companyId: 'c-warner',
@@ -64,6 +68,7 @@ export const users: User[] = [
     name: 'George White',
     email: 'george.white1@warnerbrosentertainment.com',
     isPortalUser: false,
+    active: true,
     memberships: [
       {
         companyId: 'c-warner',
@@ -76,6 +81,7 @@ export const users: User[] = [
     name: 'Julia Thompson',
     email: 'julia.thompson1@warnerbrosentertainment.com',
     isPortalUser: false,
+    active: true,
     memberships: [
       {
         companyId: 'c-warner',
@@ -88,6 +94,7 @@ export const users: User[] = [
     name: 'Peter Pan',
     email: 'peter.pan@qubecinema.com',
     isPortalUser: true,
+    active: true,
     memberships: [
       {
         companyId: 'c-qube-internal',
@@ -103,6 +110,7 @@ export const users: User[] = [
     name: 'Nina Rao',
     email: 'nina.rao@qubecinema.com',
     isPortalUser: true,
+    active: true,
     memberships: [
       {
         companyId: 'c-qube-internal',
