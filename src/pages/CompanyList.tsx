@@ -1,17 +1,21 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Building2, Plus, Search } from 'lucide-react'
 import { useStore, serviceName } from '../data/store'
 import { services } from '../data/services'
-import { Button, PageHeader, Pagination, Select, StatusBadge, TextInput, usePagination } from '../components/ui'
+import { auditLog } from '../data/audit'
+import type { Company } from '../data/types'
+import { ActionMenu, Button, Modal, PageHeader, Pagination, Select, StatusBadge, TextInput, usePagination } from '../components/ui'
 
 const PAGE_SIZE = 5
 
 export function CompanyList() {
+  const navigate = useNavigate()
   const { companies } = useStore()
   const [search, setSearch] = useState('')
   const [serviceFilter, setServiceFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [auditCompany, setAuditCompany] = useState<Company | null>(null)
 
   const filtered = useMemo(() => {
     return companies.filter((c) => {
@@ -113,9 +117,13 @@ export function CompanyList() {
                 </td>
                 <td className="px-6 py-4 text-[var(--color-muted)]">{c.lastUpdated}</td>
                 <td className="px-6 py-4 text-right">
-                  <Link to={`/companies/${c.id}`} className="text-[var(--color-muted)] hover:text-[var(--color-text)]">
-                    &hellip;
-                  </Link>
+                  <ActionMenu
+                    items={[
+                      { label: 'View Company Details', onSelect: () => navigate(`/companies/${c.id}`) },
+                      { label: 'Edit Company Details', onSelect: () => navigate(`/companies/${c.id}/edit`) },
+                      { label: 'View Company Audit Log', onSelect: () => setAuditCompany(c) },
+                    ]}
+                  />
                 </td>
               </tr>
             ))}
@@ -135,6 +143,27 @@ export function CompanyList() {
         onChange={setPage}
         totalLabel={`Showing ${pageItems.length ? (page - 1) * PAGE_SIZE + 1 : 0}–${(page - 1) * PAGE_SIZE + pageItems.length} of ${filtered.length} companies`}
       />
+
+      <Modal open={auditCompany !== null} onClose={() => setAuditCompany(null)} title="Company Audit Log">
+        {auditCompany && (
+          <div className="max-h-96 space-y-3 overflow-y-auto text-sm">
+            {auditLog
+              .filter((entry) => entry.companyId === auditCompany.id)
+              .map((entry) => (
+                <div key={entry.id} className="border-b border-[var(--color-line)] pb-2 last:border-0">
+                  <p className="text-[var(--color-text)]">{entry.summary}</p>
+                  <p className="text-xs text-[var(--color-muted)]">
+                    {new Date(entry.timestamp).toLocaleString()}
+                    {entry.actor !== 'System' && ` · by ${entry.actor}`}
+                  </p>
+                </div>
+              ))}
+            {auditLog.filter((entry) => entry.companyId === auditCompany.id).length === 0 && (
+              <p className="text-[var(--color-muted)]">No audit events recorded for {auditCompany.displayName}.</p>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
