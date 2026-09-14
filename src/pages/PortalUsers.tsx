@@ -1,8 +1,11 @@
 import { useMemo, useState } from 'react'
-import { UserPlus } from 'lucide-react'
+import { Download, Upload, UserPlus } from 'lucide-react'
 import { useStore } from '../data/store'
 import { serviceById } from '../data/services'
+import { toCSV, downloadCSV, parseCSVWithHeader, pickCSVFile } from '../utils/csv'
+import type { User } from '../data/types'
 import {
+  ActionMenu,
   Button,
   Field,
   FieldLabel,
@@ -20,7 +23,7 @@ const PAGE_SIZE = 5
 const COMPANY_MANAGEMENT_SERVICE_ID = 'company-management'
 
 export function PortalUsers() {
-  const { users, invitePortalUser } = useStore()
+  const { users, invitePortalUser, setUserActive, forcePasswordReset } = useStore()
   const portal = useMemo(() => users.filter((u) => u.isPortalUser), [users])
   const { page, pageCount, setPage, pageItems } = usePagination(portal, PAGE_SIZE)
 
@@ -44,15 +47,67 @@ export function PortalUsers() {
     setToast(`Invitation sent to ${email.trim()}.`)
   }
 
+  function handleToggleActive(user: User) {
+    setUserActive(user.id, !user.active)
+    setToast(`${user.name} ${user.active ? 'deactivated' : 'activated'}.`)
+  }
+
+  function handleSendResetLink(user: User) {
+    forcePasswordReset(user.id)
+    setToast(`Password reset link sent to ${user.email}.`)
+  }
+
+  function handleExport() {
+    const csv = toCSV(portal, [
+      { key: 'name', header: 'Name', value: (u: User) => u.name },
+      { key: 'email', header: 'Email', value: (u: User) => u.email },
+      {
+        key: 'role',
+        header: 'Role',
+        value: (u: User) =>
+          u.memberships
+            .flatMap((m) => m.roleAssignments)
+            .find((r) => r.serviceId === COMPANY_MANAGEMENT_SERVICE_ID)?.roleId ?? '',
+      },
+      { key: 'status', header: 'Status', value: (u: User) => (u.active ? 'Active' : 'Inactive') },
+    ])
+    downloadCSV(`portal-users-${new Date().toISOString().slice(0, 10)}.csv`, csv)
+  }
+
+  async function handleImport() {
+    const text = await pickCSVFile()
+    if (!text) return
+    const rows = parseCSVWithHeader(text)
+    const seen = new Set<string>()
+    let count = 0
+    for (const row of rows) {
+      const rowEmail = (row.email ?? row.Email ?? '').trim().toLowerCase()
+      if (!rowEmail || seen.has(rowEmail)) continue
+      seen.add(rowEmail)
+      const rowRole = (row.role ?? row.Role ?? companyManagementRoles[0]?.id ?? '').trim()
+      invitePortalUser(rowEmail, rowRole)
+      count++
+    }
+    setToast(count > 0 ? `Invited ${count} portal user(s) from CSV.` : 'No valid rows found in that file.')
+  }
+
   return (
     <div>
       <PageHeader
         title="Portal Users"
         description="Internal @qubecinema.com staff with Company Management access (spec §7)."
         actions={
-          <Button icon={<UserPlus className="h-4 w-4" />} onClick={openInvite}>
-            Invite Portal User
-          </Button>
+          <>
+            <Button variant="outline" icon={<Upload className="h-4 w-4" />} onClick={handleImport}>
+              Import CSV
+            </Button>
+            <Button variant="outline" icon={<Download className="h-4 w-4" />} onClick={handleExport}>
+              Export CSV
+            </Button>
+            <Button icon={<UserPlus className="h-4 w-4" />} onClick={openInvite}>
+              Invite Portal User
+            </Button>
+          </>
         }
       />
 
@@ -64,6 +119,7 @@ export function PortalUsers() {
               <th className="px-6 py-3 font-medium">Email</th>
               <th className="px-6 py-3 font-medium">Role</th>
               <th className="px-6 py-3 font-medium">Status</th>
+              <th className="px-6 py-3 font-medium text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--color-line)]">
@@ -81,7 +137,19 @@ export function PortalUsers() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <StatusBadge status={assignment?.inviteStatus === 'Accepted' ? 'Active' : 'Invited'} />
+                    <StatusBadge status={!u.active ? 'Inactive' : assignment?.inviteStatus === 'Accepted' ? 'Active' : 'Invited'} />
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <ActionMenu
+                      items={[
+                        { label: 'Send Password Reset Link', onSelect: () => handleSendResetLink(u) },
+                        {
+                          label: u.active ? 'Deactivate Portal User' : 'Activate Portal User',
+                          onSelect: () => handleToggleActive(u),
+                          destructive: u.active,
+                        },
+                      ]}
+                    />
                   </td>
                 </tr>
               )

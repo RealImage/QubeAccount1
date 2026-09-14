@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutGrid, Building2, Users, Package, Settings, Moon, LogOut } from 'lucide-react'
+import { LayoutGrid, Building2, Users, Package, ScrollText, Settings, Moon, LogOut } from 'lucide-react'
 import clsx from 'clsx'
 
 const navItems = [
@@ -7,6 +7,7 @@ const navItems = [
   { to: '/companies', label: 'Company Management', icon: Building2 },
   { to: '/portal-users', label: 'Portal Users', icon: Users },
   { to: '/services', label: 'Services', icon: Package },
+  { to: '/audit', label: 'Audit Log', icon: ScrollText },
   { to: '/settings', label: 'Settings', icon: Settings },
 ]
 

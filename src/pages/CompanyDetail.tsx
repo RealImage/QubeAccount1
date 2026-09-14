@@ -1,23 +1,29 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Building2, FileText, Layers, UserPlus, Users as UsersIcon } from 'lucide-react'
+import { ArrowLeft, Building2, Download, FileText, Layers, Upload, UserPlus, Users as UsersIcon } from 'lucide-react'
 import clsx from 'clsx'
 import { useStore, serviceName } from '../data/store'
 import { services } from '../data/services'
 import { effectiveAccess } from '../data/access'
 import type { User } from '../data/types'
-import { ActionMenu, Button, Card, Modal, StatusBadge, Toast } from '../components/ui'
+import { toCSV, downloadCSV, parseCSVWithHeader, pickCSVFile } from '../utils/csv'
+import { ActionMenu, Button, Card, Field, FieldLabel, Modal, StatusBadge, TextInput, Toast } from '../components/ui'
 
 type Tab = 'details' | 'users' | 'subscriptions'
 
 export function CompanyDetail() {
   const { id } = useParams()
-  const { companies, users, setCompanySubscriptions, setUserActive } = useStore()
+  const { companies, users, setCompanySubscriptions, setUserActive, addUserToCompany, importUsersToCompany, forcePasswordReset } =
+    useStore()
   const [tab, setTab] = useState<Tab>('details')
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null)
   const [detailsUser, setDetailsUser] = useState<User | null>(null)
   const [auditUser, setAuditUser] = useState<User | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+  const [addUserOpen, setAddUserOpen] = useState(false)
+  const [newEmail, setNewEmail] = useState('')
+  const [newName, setNewName] = useState('')
+  const [addUserError, setAddUserError] = useState<string | null>(null)
 
   const company = companies.find((c) => c.id === id)
   if (!company) return <p className="text-[var(--color-muted)]">Company not found.</p>
@@ -46,6 +52,56 @@ export function CompanyDetail() {
   function handleToggleActive(user: User) {
     setUserActive(user.id, !user.active)
     setToast(`${user.name} ${user.active ? 'deactivated' : 'activated'}.`)
+  }
+
+  function handleSendResetLink(user: User) {
+    forcePasswordReset(user.id)
+    setToast(`Password reset link sent to ${user.email}.`)
+  }
+
+  function openAddUser() {
+    setNewEmail('')
+    setNewName('')
+    setAddUserError(null)
+    setAddUserOpen(true)
+  }
+
+  function handleAddUser(e: React.FormEvent) {
+    e.preventDefault()
+    const result = addUserToCompany(company!.id, newEmail.trim(), newName.trim())
+    if (!result.ok) {
+      setAddUserError(result.reason ?? 'Could not add this user.')
+      return
+    }
+    setAddUserOpen(false)
+    setToast(`${newEmail.trim()} added to ${company!.displayName}.`)
+  }
+
+  function handleExportUsers() {
+    const csv = toCSV(companyUsers, [
+      { key: 'name', header: 'Name', value: (u: User) => u.name },
+      { key: 'email', header: 'Email', value: (u: User) => u.email },
+      {
+        key: 'services',
+        header: 'Services',
+        value: (u: User) => {
+          const membership = u.memberships.find((m) => m.companyId === company!.id)
+          return membership?.roleAssignments.map((r) => `${serviceName(r.serviceId)} (${r.roleId})`).join('; ') ?? ''
+        },
+      },
+      { key: 'status', header: 'Status', value: (u: User) => (u.active ? 'Active' : 'Inactive') },
+    ])
+    downloadCSV(`${company!.code || company!.id}-users-${new Date().toISOString().slice(0, 10)}.csv`, csv)
+  }
+
+  async function handleImportUsers() {
+    const text = await pickCSVFile()
+    if (!text) return
+    const rows = parseCSVWithHeader(text).map((r) => ({ email: r.email ?? r.Email ?? '', name: r.name ?? r.Name ?? '' }))
+    const result = importUsersToCompany(company!.id, rows)
+    const parts = [`${result.created + result.added} added`]
+    if (result.skipped > 0) parts.push(`${result.skipped} skipped`)
+    setToast(`Import complete: ${parts.join(', ')}.`)
   }
 
   return (
@@ -131,7 +187,17 @@ export function CompanyDetail() {
               <h2 className="font-[family-name:var(--font-display)] text-lg font-medium text-[var(--color-text)]">Company Users</h2>
               <p className="text-sm text-[var(--color-muted)]">Manage users associated with {company.displayName}.</p>
             </div>
-            <Button icon={<UserPlus className="h-4 w-4" />}>Add User</Button>
+            <div className="flex gap-2">
+              <Button variant="outline" icon={<Upload className="h-4 w-4" />} onClick={handleImportUsers}>
+                Import CSV
+              </Button>
+              <Button variant="outline" icon={<Download className="h-4 w-4" />} onClick={handleExportUsers}>
+                Export CSV
+              </Button>
+              <Button icon={<UserPlus className="h-4 w-4" />} onClick={openAddUser}>
+                Add User
+              </Button>
+            </div>
           </div>
           <table className="w-full text-left text-sm">
             <thead className="border-b border-[var(--color-line)] text-[var(--color-muted)]">
@@ -163,6 +229,7 @@ export function CompanyDetail() {
                         items={[
                           { label: 'View User Details', onSelect: () => setDetailsUser(u) },
                           { label: 'View User Access Audit', onSelect: () => setAuditUser(u) },
+                          { label: 'Send Password Reset Link', onSelect: () => handleSendResetLink(u) },
                           {
                             label: u.active ? 'Deactivate User' : 'Activate User',
                             onSelect: () => handleToggleActive(u),
@@ -265,6 +332,7 @@ export function CompanyDetail() {
                             items={[
                               { label: 'View User Details', onSelect: () => setDetailsUser(user) },
                               { label: 'View User Access Audit', onSelect: () => setAuditUser(user) },
+                              { label: 'Send Password Reset Link', onSelect: () => handleSendResetLink(user) },
                               {
                                 label: user.active ? 'Deactivate User' : 'Activate User',
                                 onSelect: () => handleToggleActive(user),
@@ -347,6 +415,39 @@ export function CompanyDetail() {
             )}
           </div>
         )}
+      </Modal>
+
+      <Modal open={addUserOpen} onClose={() => setAddUserOpen(false)} title="Add User to Company">
+        <form onSubmit={handleAddUser}>
+          <div className="space-y-4">
+            <Field>
+              <FieldLabel>Email</FieldLabel>
+              <TextInput
+                type="email"
+                required
+                autoFocus
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="name@example.com"
+              />
+            </Field>
+            <Field>
+              <FieldLabel>Name</FieldLabel>
+              <TextInput value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Optional if the user already exists" />
+            </Field>
+            {addUserError && <p className="text-sm text-[var(--color-danger)]">{addUserError}</p>}
+            <p className="text-xs text-[var(--color-muted)]">
+              This adds company membership only — no role/service is assigned yet, matching a just-recognized identity with zero
+              access until a role is granted (spec §4.4).
+            </p>
+          </div>
+          <div className="mt-6 flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setAddUserOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">Add User</Button>
+          </div>
+        </form>
       </Modal>
 
       <Toast message={toast} onDismiss={() => setToast(null)} />
