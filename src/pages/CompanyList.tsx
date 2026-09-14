@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Building2, Plus, Search, SlidersHorizontal } from 'lucide-react'
+import { Building2, Download, Plus, Search, SlidersHorizontal, Upload } from 'lucide-react'
 import { useStore, serviceName } from '../data/store'
 import { services } from '../data/services'
-import { auditLog } from '../data/audit'
+import { toCSV, downloadCSV, parseCSVWithHeader, pickCSVFile } from '../utils/csv'
 import type { Company, CompanyStatus } from '../data/types'
 import {
   ActionMenu,
@@ -16,6 +16,7 @@ import {
   Pagination,
   StatusBadge,
   TextInput,
+  Toast,
   usePagination,
 } from '../components/ui'
 
@@ -58,12 +59,13 @@ function filterCount(f: Filters) {
 
 export function CompanyList() {
   const navigate = useNavigate()
-  const { companies } = useStore()
+  const { companies, auditLog, importCompanies } = useStore()
   const [search, setSearch] = useState('')
   const [auditCompany, setAuditCompany] = useState<Company | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [filters, setFilters] = useState<Filters>(emptyFilters)
   const [draftFilters, setDraftFilters] = useState<Filters>(emptyFilters)
+  const [toast, setToast] = useState<string | null>(null)
 
   const cityOptions = useMemo(() => [...new Set(companies.map((c) => c.address.city).filter(Boolean))].sort(), [companies])
   const stateOptions = useMemo(() => [...new Set(companies.map((c) => c.address.state).filter(Boolean))].sort(), [companies])
@@ -116,15 +118,54 @@ export function CompanyList() {
     setDraftFilters(emptyFilters)
   }
 
+  function handleExport() {
+    const csv = toCSV<Company>(filtered, [
+      { key: 'displayName', header: 'Display Name', value: (c) => c.displayName },
+      { key: 'legalName', header: 'Legal Name', value: (c) => c.legalName },
+      { key: 'code', header: 'Code', value: (c) => c.code },
+      { key: 'type', header: 'Type', value: (c) => c.type },
+      { key: 'status', header: 'Status', value: (c) => c.status },
+      { key: 'contactEmail', header: 'Contact Email', value: (c) => c.contactEmail },
+      { key: 'contactPhone', header: 'Contact Phone', value: (c) => c.contactPhone },
+      { key: 'website', header: 'Website', value: (c) => c.website },
+      { key: 'street', header: 'Street', value: (c) => c.address.street },
+      { key: 'city', header: 'City', value: (c) => c.address.city },
+      { key: 'state', header: 'State', value: (c) => c.address.state },
+      { key: 'zip', header: 'Zip', value: (c) => c.address.zip },
+      { key: 'country', header: 'Country', value: (c) => c.address.country },
+      { key: 'emailDomains', header: 'Email Domains', value: (c) => c.emailDomains.join(';') },
+      { key: 'subscribedServices', header: 'Subscribed Services', value: (c) => c.subscribedServiceIds.map(serviceName).join(';') },
+      { key: 'lastUpdated', header: 'Last Updated', value: (c) => c.lastUpdated },
+      { key: 'updatedBy', header: 'Updated By', value: (c) => c.updatedBy },
+    ])
+    downloadCSV(`companies-${new Date().toISOString().slice(0, 10)}.csv`, csv)
+  }
+
+  async function handleImport() {
+    const text = await pickCSVFile()
+    if (!text) return
+    const rows = parseCSVWithHeader(text)
+    const { created } = importCompanies(rows)
+    setToast(created > 0 ? `Imported ${created} compan${created === 1 ? 'y' : 'ies'} from CSV.` : 'No valid rows found in that file.')
+  }
+
   return (
     <div>
       <PageHeader
         title="Company Management"
         description="Manage all company accounts."
         actions={
-          <Link to="/companies/new">
-            <Button icon={<Plus className="h-4 w-4" />}>Add New Company</Button>
-          </Link>
+          <>
+            <Button variant="outline" icon={<Upload className="h-4 w-4" />} onClick={handleImport}>
+              Import CSV
+            </Button>
+            <Button variant="outline" icon={<Download className="h-4 w-4" />} onClick={handleExport}>
+              Export CSV
+            </Button>
+            <Link to="/companies/new">
+              <Button icon={<Plus className="h-4 w-4" />}>Add New Company</Button>
+            </Link>
+          </>
         }
       />
 
@@ -320,6 +361,8 @@ export function CompanyList() {
           onChange={(updatedBy) => setDraftFilters((prev) => ({ ...prev, updatedBy }))}
         />
       </Drawer>
+
+      <Toast message={toast} onDismiss={() => setToast(null)} />
     </div>
   )
 }

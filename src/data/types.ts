@@ -108,8 +108,15 @@ export type AuditAction =
   | 'role_removed'
   | 'subscription_added'
   | 'subscription_removed'
+  | 'company_created'
+  | 'company_updated'
   | 'company_deactivated'
   | 'company_reactivated'
+  | 'user_deactivated'
+  | 'user_reactivated'
+  | 'password_reset_forced'
+  | 'user_login'
+  | 'service_accessed'
 
 export interface AuditEntry {
   id: string
@@ -120,4 +127,12 @@ export interface AuditEntry {
   serviceId?: string
   timestamp: string
   summary: string
+  // Login/service-access context (device, network origin). Entra/Descope owns
+  // real authentication (spec §8), so today these are illustrative only —
+  // populated on seeded `user_login`/`service_accessed` entries to show the
+  // shape a real IdP/session-event feed would fill in, not derived from any
+  // live session in this build.
+  ipAddress?: string
+  region?: string
+  device?: string
 }

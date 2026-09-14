@@ -8,6 +8,7 @@ import { CompanyDetail } from './pages/CompanyDetail'
 import { ServicesCatalog } from './pages/ServicesCatalog'
 import { ServiceConfigure } from './pages/ServiceConfigure'
 import { PortalUsers } from './pages/PortalUsers'
+import { AuditLog } from './pages/AuditLog'
 import { Settings } from './pages/Settings'
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="portal-users" element={<PortalUsers />} />
             <Route path="services" element={<ServicesCatalog />} />
             <Route path="services/:id" element={<ServiceConfigure />} />
+            <Route path="audit" element={<AuditLog />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
